@@ -1,6 +1,7 @@
 name: detector
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - "detector/**"
