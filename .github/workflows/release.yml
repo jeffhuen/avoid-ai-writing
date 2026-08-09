@@ -29,6 +29,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.repository == 'conorbronsdon/avoid-ai-writing'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -99,6 +100,7 @@ jobs:
   # the CHANGELOG heading the release job used — the drift this workflow
   # already warns about must block a publish, not ride into the registry.
   publish-npm:
+    if: github.repository == 'conorbronsdon/avoid-ai-writing'
     needs: release
     runs-on: ubuntu-latest
     permissions:

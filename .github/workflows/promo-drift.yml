@@ -31,6 +31,7 @@ concurrency:
 
 jobs:
   check:
+    if: github.repository == 'conorbronsdon/avoid-ai-writing'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

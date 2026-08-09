@@ -49,10 +49,10 @@ if not text.startswith("---\n"):
 end = text.index("\n---\n", 4) + len("\n---\n")
 fm, body = text[:end], text[end:]
 
-version_lines = [l for l in fm.splitlines() if l.startswith("version:")]
+version_lines = [l.strip() for l in fm.splitlines() if l.strip().startswith("version:")]
 if len(version_lines) != 1:
     sys.exit("sync-cursor-rules: expected exactly one version: line in frontmatter")
-version = version_lines[0].split(":", 1)[1].strip()
+version = version_lines[0].split(":", 1)[1].strip().strip("\"'")
 
 # ── Portability rewrites (see header comment) ────────────────────────
 body = replace_once(
@@ -94,7 +94,7 @@ body = replace_once(
 )
 
 cursor_fm = f"""---
-description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v{version}. See https://github.com/conorbronsdon/avoid-ai-writing.
+description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v{version}. See https://github.com/jeffhuen/avoid-ai-writing.
 globs: ["**/*.md", "**/*.mdx", "**/*.txt", "**/*.rst", "**/*.adoc"]
 alwaysApply: false
 ---

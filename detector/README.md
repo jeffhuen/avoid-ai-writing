@@ -41,9 +41,15 @@ CommonJS).
 | `confidence_category` | `low` / `medium` / `high` | |
 | `highlight_sentence_for_ai` | region[] | sentence spans with byte offsets + per-region score, for UI highlighting |
 
-`options.contextMode` accepts `general` (default) or `technical`; technical mode
-suppresses flags that are legitimate in code-adjacent prose (e.g. Title Case
-headers). Invalid modes fall back to `general` and set `stats.contextModeFallback`.
+`options.contextMode` accepts `general` (default), `technical`, `marketing`, or
+`personal`. Invalid modes fall back to `general` and set
+`stats.contextModeFallback`.
+
+`options.sourceMode` accepts `plain` (default) or `rendered-markdown`. Rendered
+Markdown mode masks YAML frontmatter and HTML comments before analysis. It
+replaces their characters with spaces rather than deleting them, so later issue
+offsets still point into the original source. The result reports the selected
+mode, any invalid-mode fallback, and the masked block counts in `stats`.
 
 ## `validate(original, rewritten, options?)` → result
 

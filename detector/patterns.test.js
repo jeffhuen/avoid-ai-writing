@@ -83,6 +83,70 @@ test('stats fields sum to issues length', () => {
   assert.equal(sum, r.issues.length, `stats sum (${sum}) != issues (${r.issues.length})`);
 });
 
+test('rendered Markdown ignores frontmatter and HTML comments', () => {
+  const text = [
+    '---',
+    'title: A Pivotal Tapestry Of Innovation',
+    'summary: We delve into a seamless and robust landscape.',
+    '---',
+    '<!--',
+    'Moreover, this game-changing framework is a testament to progress.',
+    '-->',
+    'The carpenter measured the door twice before cutting the oak board.',
+    'He shaved one edge, reset the hinges, and checked the latch again.',
+  ].join('\n');
+  const plain = AIDetector.analyzeText(text);
+  const rendered = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
+
+  assert.ok(plain.issues.length > rendered.issues.length, 'plain mode should still inspect source-only text');
+  assert.equal(rendered.stats.sourceMode, 'rendered-markdown');
+  assert.equal(rendered.stats.maskedFrontmatter, 1);
+  assert.equal(rendered.stats.maskedHtmlComments, 1);
+  assert.equal(rendered.issues.some((i) => /delve|tapestry|game-changing/i.test(i.text || '')), false);
+});
+
+test('rendered Markdown does not mistake a thematic break for frontmatter', () => {
+  const text = [
+    '---',
+    '',
+    'Moreover, the team described a seamless and robust landscape in the final report.',
+    '',
+    '---',
+  ].join('\n');
+  const r = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
+
+  assert.equal(r.stats.maskedFrontmatter, 0);
+  assert.ok(r.issues.length > 0, 'prose between thematic breaks should remain visible');
+});
+
+test('rendered Markdown preserves issue offsets after a comment', () => {
+  const comment = '<!-- This seamless, robust paradigm should stay hidden. -->\n';
+  const prose = 'Moreover, the team described the ordinary update in broad terms before publishing the final note to every subscriber.';
+  const r = AIDetector.analyzeText(comment + prose, { sourceMode: 'rendered-markdown' });
+  const transition = r.issues.find((i) => i.type === 'transition');
+
+  assert.ok(transition, 'reader-facing prose should still be analyzed');
+  assert.equal(transition.index, comment.length);
+});
+
+test('blockquote masking preserves issue offsets in the original source', () => {
+  const quote = '> This seamless landscape is a testament to progress.\r\n> Moreover, it is a robust paradigm.\r\n';
+  const prose = 'Moreover, the editor published an ordinary correction after checking the source against the archived report.';
+  const r = AIDetector.analyzeText(quote + prose, { sourceMode: 'rendered-markdown' });
+  const transition = r.issues.find((i) => i.type === 'transition');
+
+  assert.ok(transition, 'reader-facing prose after the quote should still be analyzed');
+  assert.equal(transition.index, quote.length);
+});
+
+test('invalid source mode falls back visibly to plain mode', () => {
+  const text = 'We delve into a seamless, robust landscape while the team prepares a detailed report for the next scheduled meeting.';
+  const r = AIDetector.analyzeText(text, { sourceMode: 'markdownish' });
+  assert.equal(r.stats.sourceMode, 'plain');
+  assert.equal(r.stats.sourceModeFallback, 'markdownish');
+  assert.ok(r.issues.length > 0, 'fallback should analyze the original text');
+});
+
 test('repeated Tier 1 phrase does not inflate score linearly', () => {
   const single = AIDetector.analyzeText('We delve into the landscape of many things today.');
   const fivefold = AIDetector.analyzeText(

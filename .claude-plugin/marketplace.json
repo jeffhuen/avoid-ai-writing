@@ -1,15 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "conorbronsdon-skills",
-  "description": "Conor Bronsdon's public Claude Code / Cowork skills.",
+  "name": "jeffhuen-skills",
+  "description": "Jeff Huen's maintained editorial skills.",
   "owner": {
-    "name": "Conor Bronsdon"
+    "name": "Jeff Huen"
   },
   "plugins": [
     {
       "name": "avoid-ai-writing",
       "source": "./plugins/avoid-ai-writing",
-      "description": "Audit & rewrite content to remove AI writing patterns (\"AI-isms\"). Supports detect-only and edit-in-place modes, voice profiles, and iterate-to-convergence.",
+      "description": "Source-aware prose audit and rewrite that removes AI-associated habits while preserving voice, genre, and project rules.",
       "category": "productivity",
       "keywords": ["writing", "editing", "ai-detection", "humanize"]
     }

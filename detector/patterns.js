@@ -726,6 +726,32 @@ const AIDetector = (() => {
     return chars.join('');
   }
 
+  function maskRenderedMarkdown(text) {
+    const chars = text.split('');
+    const blank = (start, end) => {
+      for (let i = start; i < end && i < chars.length; i += 1) {
+        if (chars[i] !== '\n' && chars[i] !== '\r') chars[i] = ' ';
+      }
+    };
+
+    let maskedFrontmatter = 0;
+    const frontmatter = /^(?:\uFEFF)?---[ \t]*\r?\n(?=[^\r\n]*\S)[\s\S]*?\r?\n---[ \t]*(?=\r?\n|$)/.exec(text);
+    if (frontmatter) {
+      blank(frontmatter.index, frontmatter.index + frontmatter[0].length);
+      maskedFrontmatter = 1;
+    }
+
+    let maskedHtmlComments = 0;
+    const commentRe = /<!--[\s\S]*?-->/g;
+    let match;
+    while ((match = commentRe.exec(text)) !== null) {
+      blank(match.index, match.index + match[0].length);
+      maskedHtmlComments += 1;
+    }
+
+    return { text: chars.join(''), maskedFrontmatter, maskedHtmlComments };
+  }
+
   // ─── Forms that open with `#` but are not social tags ──────────────
   // `#` is overloaded in technical prose and the hashtag rule counts every
   // `#word` it sees, so these are subtracted before the threshold applies:
@@ -909,6 +935,22 @@ const AIDetector = (() => {
     const contextMode = VALID_CONTEXT_MODES.has(requestedMode) ? requestedMode : 'general';
     const contextModeFallback = requestedMode !== contextMode ? requestedMode : null;
 
+    // Source mode separates reader-facing Markdown from its source-only
+    // metadata and editorial comments. Blanking preserves byte offsets for
+    // issue highlights. Plain mode remains the default for compatibility.
+    const VALID_SOURCE_MODES = new Set(['plain', 'rendered-markdown']);
+    const requestedSourceMode = options.sourceMode || 'plain';
+    const sourceMode = VALID_SOURCE_MODES.has(requestedSourceMode) ? requestedSourceMode : 'plain';
+    const sourceModeFallback = requestedSourceMode !== sourceMode ? requestedSourceMode : null;
+    let maskedFrontmatter = 0;
+    let maskedHtmlComments = 0;
+    if (sourceMode === 'rendered-markdown') {
+      const masked = maskRenderedMarkdown(text);
+      text = masked.text;
+      maskedFrontmatter = masked.maskedFrontmatter;
+      maskedHtmlComments = masked.maskedHtmlComments;
+    }
+
     // Pre-pass: strip Markdown blockquotes before scoring. A human
     // reacting to AI text by quoting it shouldn't have the quoted block
     // counted against their own writing. Requires ≥2 consecutive `> `
@@ -924,7 +966,17 @@ const AIDetector = (() => {
         quotedLines++;
       }
     }
-    text = rawLines.filter((_, i) => !stripIdx.has(i)).join('\n');
+    const chars = text.split('');
+    let cursor = 0;
+    for (let i = 0; i < rawLines.length; i += 1) {
+      if (stripIdx.has(i)) {
+        for (let j = cursor; j < cursor + rawLines[i].length; j += 1) chars[j] = ' ';
+      }
+      cursor += rawLines[i].length;
+      if (text[cursor] === '\r') cursor += 1;
+      if (text[cursor] === '\n') cursor += 1;
+    }
+    text = chars.join('');
 
     // Pre-pass: strip bypass-trick chars before pattern matching so
     // "delve" with a Cyrillic 'е' still hits Tier 1. Original text is
@@ -934,7 +986,14 @@ const AIDetector = (() => {
 
     const wordCount = countWords(text);
     if (wordCount < 10) {
-      return { ...buildV2Defaults('UNSCORED', 'low'), score: 0, label: 'Too short', issues: [], stats: { wordCount, contextMode, contextModeFallback }, tooShort: true };
+      return {
+        ...buildV2Defaults('UNSCORED', 'low'),
+        score: 0,
+        label: 'Too short',
+        issues: [],
+        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, maskedFrontmatter, maskedHtmlComments },
+        tooShort: true,
+      };
     }
     if (wordCount > MAX_WORDS) {
       return {
@@ -942,7 +1001,7 @@ const AIDetector = (() => {
         score: 0,
         label: 'Text too long',
         issues: [],
-        stats: { wordCount, contextMode, contextModeFallback },
+        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, maskedFrontmatter, maskedHtmlComments },
         tooLong: true,
       };
     }
@@ -1641,6 +1700,10 @@ const AIDetector = (() => {
         patternCount: deduped.length - tier1Count - tier2Count - tier3Count,
         contextMode,
         contextModeFallback,
+        sourceMode,
+        sourceModeFallback,
+        maskedFrontmatter,
+        maskedHtmlComments,
         normalization: norm.flags,
         quotedLines,
         unmappedHighlights: regions._unmapped ?? 0,

@@ -5,6 +5,7 @@ on:
     paths:
       - "detector/**"
       - "scripts/**"
+      - "provenance/**"
       - "examples/**"
       - "package.json"
       - ".github/workflows/detector-test.yml"
@@ -17,6 +18,7 @@ on:
     paths:
       - "detector/**"
       - "scripts/**"
+      - "provenance/**"
       - "examples/**"
       - "package.json"
       - ".github/workflows/detector-test.yml"

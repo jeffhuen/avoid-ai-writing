@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-09",
+  "sources": [
+    {
+      "id": "wikipedia-signs-ai-writing",
+      "kind": "living-reference",
+      "title": "Wikipedia:Signs of AI writing",
+      "url": "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing",
+      "revision": 1368577087,
+      "revisionTimestamp": "2026-08-09T22:29:11Z",
+      "license": "CC BY-SA 4.0",
+      "remoteCheck": {
+        "type": "mediawiki",
+        "title": "Wikipedia:Signs of AI writing"
+      },
+      "use": "Descriptive research index. Wikipedia-specific indicators require a separate scope decision."
+    },
+    {
+      "id": "wikipedia-ai-cleanup",
+      "kind": "living-reference",
+      "title": "Wikipedia:WikiProject AI Cleanup",
+      "url": "https://en.wikipedia.org/wiki/Wikipedia:WikiProject_AI_Cleanup",
+      "revision": 1368380598,
+      "revisionTimestamp": "2026-08-08T18:55:22Z",
+      "license": "CC BY-SA 4.0",
+      "remoteCheck": {
+        "type": "mediawiki",
+        "title": "Wikipedia:WikiProject AI Cleanup"
+      },
+      "use": "Project context and scope. Not a detector rule catalog by itself."
+    },
+    {
+      "id": "blader-humanizer",
+      "kind": "comparative-implementation",
+      "title": "blader/humanizer",
+      "url": "https://github.com/blader/humanizer",
+      "revision": "523374dee72d67c7b2b5f858ea0094ffda49c3ac",
+      "license": "MIT",
+      "use": "Compare source integration, voice calibration, information preservation, and rewrite guardrails."
+    },
+    {
+      "id": "upstream-avoid-ai-writing",
+      "kind": "upstream",
+      "title": "conorbronsdon/avoid-ai-writing",
+      "url": "https://github.com/conorbronsdon/avoid-ai-writing",
+      "revision": "d9fbca05a912aae8b35b56c92d132962c2cf4520",
+      "license": "MIT",
+      "use": "Technical foundation and source of selectively merged fixes."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "rendered-markdown-source-mode",
+      "status": "adopted",
+      "sources": [
+        "wikipedia-signs-ai-writing",
+        "upstream-avoid-ai-writing"
+      ],
+      "reason": "Source-only comments and metadata should not be judged as reader-facing prose.",
+      "implementation": [
+        "detector/patterns.js"
+      ],
+      "tests": [
+        "detector/patterns.test.js"
+      ]
+    },
+    {
+      "id": "visible-source-provenance",
+      "status": "adopted",
+      "sources": [
+        "wikipedia-signs-ai-writing",
+        "wikipedia-ai-cleanup",
+        "blader-humanizer"
+      ],
+      "reason": "A maintained source map makes scope and adaptation decisions reviewable without turning a living page into an automatic rules feed.",
+      "implementation": [
+        "provenance/sources.json",
+        "scripts/check-sources.js"
+      ],
+      "tests": [
+        "npm run sources:check"
+      ]
+    },
+    {
+      "id": "wikipedia-specific-indicators",
+      "status": "deferred",
+      "sources": [
+        "wikipedia-signs-ai-writing"
+      ],
+      "reason": "Wikitext, edit-summary, AfC, and policy-assurance patterns do not belong in general prose analysis unless a Wikipedia profile requests them."
+    },
+    {
+      "id": "automatic-rule-import",
+      "status": "rejected",
+      "sources": [
+        "wikipedia-signs-ai-writing",
+        "wikipedia-ai-cleanup"
+      ],
+      "reason": "A source revision prompts review. It cannot establish cross-genre usefulness or acceptable false-positive cost."
+    }
+  ]
+}

@@ -13,7 +13,7 @@ cp "$src" "$dest"
 # Keep plugin.json's version in lockstep with the SKILL.md frontmatter version.
 # Read the version only from the first YAML frontmatter block, and strip any CR
 # so a CRLF checkout can't forge a mismatch on visually-identical strings.
-skill_version="$(sed -n '/^---[[:space:]]*$/,/^---[[:space:]]*$/ s/^version:[[:space:]]*//p' "$src" | head -n1 | tr -d '\r')"
+skill_version="$(sed -n '/^---[[:space:]]*$/,/^---[[:space:]]*$/ s/^[[:space:]]*version:[[:space:]]*//p' "$src" | head -n1 | tr -d '\r\"')"
 if [ -z "$skill_version" ]; then
   echo "could not parse 'version:' from SKILL.md frontmatter" >&2
   exit 1

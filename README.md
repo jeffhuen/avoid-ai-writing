@@ -1,12 +1,11 @@
 <div align="center">
 
-# avoid-ai-writing
+# avoid-ai-writing, editorial fork
 
 Audit & rewrite content to remove AI writing patterns. A practical skill for any AI agent. Supports detect-only and edit-in-place modes, plus voice profiles.
 
-[![GitHub stars](https://img.shields.io/github/stars/conorbronsdon/avoid-ai-writing?style=social)](https://github.com/conorbronsdon/avoid-ai-writing/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/jeffhuen/avoid-ai-writing?style=social)](https://github.com/jeffhuen/avoid-ai-writing/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![X](https://img.shields.io/badge/X-@ConorBronsdon-black?style=flat-square&logo=x)](https://x.com/ConorBronsdon)
 
 <img src="docs/demo.gif" alt="The bundled detector engine flagging 13 AI-writing patterns by category in a sample paragraph, then scoring the clean rewrite 0/100" width="800">
 </div>
@@ -15,6 +14,13 @@ Audit & rewrite content to remove AI writing patterns. A practical skill for any
 
 
 A portable writing skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenClaw](https://github.com/openclaw/openclaw), [Hermes](https://github.com/NousResearch/hermes-agent), and any other [agentskills.io](https://agentskills.io)-compatible agent. Audits and rewrites content to remove AI writing patterns ("AI-isms").
+
+This is Jeff Huen's maintained fork of
+[conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing).
+It is moving toward source-aware, project-aware editorial work that preserves
+voice and genre instead of treating a generic pattern score as an authorship
+test. See [DIRECTION.md](./DIRECTION.md) for the rationale, upstream policy, and
+decision record.
 
 **Three modes:**
 - **Rewrite** (default) — flags AI patterns and rewrites the text to fix them. A built-in second pass catches patterns that survived the first edit.
@@ -42,6 +48,7 @@ A one-shot "make this sound human" prompt catches the obvious stuff. This skill 
 - **112-entry word replacement table across 3 tiers + 10 Tier 3 phrases** — not vibes-based. Every flagged word has a specific, plainer alternative. "Leverage" → "use." "Commence" → "start." Tier 1 words always flag, Tier 2 words flag when they cluster, Tier 3 words flag only at high density. Tier 1 itself splits into **1A frequency markers** (`delve`, `tapestry`) and **1B clarity edits** (`in order to`, `utilize`) — same fix, but only 1A is evidence about how a passage was produced, and 1B is weighted lower so a wordiness fix cannot push a document toward an AI classification. Tier 3 *phrases* (multi-word boilerplate like "the integration of," "decentralized compute") flag on per-phrase repetition or when 3+ distinct phrases stack in one piece — the LLM-self-varies-boilerplate shape.
 - **61 pattern categories** — representative examples below, each with before/after. Includes structural detection (hashtag stuffing, bare-NP bullet lists, hedge-stacked predictions), AI-tool fingerprints (placeholders, citation markup, UTM params), rhythm/uniformity checks, conversational-register tells, and writer-side tests. The full catalog lives in [`SKILL.md`](./SKILL.md); this count is enforced against it in CI.
 - **Detect mode** — flag patterns without rewriting. See which flags are real problems vs. judgment calls. Useful when patterns might be intentional or you're auditing content you don't want altered.
+- **Rendered Markdown mode** — ignore YAML frontmatter and HTML comments while keeping issue offsets aligned with the source file.
 - **Works across platforms** — one `SKILL.md` runs in Claude Code, Cowork (as a plugin), OpenClaw, and Cursor (as a ported rule). See the install paths below.
 
 ## Installation & Usage
@@ -51,7 +58,7 @@ A one-shot "make this sound human" prompt catches the obvious stuff. This skill 
 **Option 1: Clone into skills directory**
 
 ```bash
-git clone https://github.com/conorbronsdon/avoid-ai-writing ~/.claude/skills/avoid-ai-writing
+git clone https://github.com/jeffhuen/avoid-ai-writing ~/.claude/skills/avoid-ai-writing
 ```
 
 **Option 2: Copy the file directly**
@@ -83,12 +90,12 @@ Then use `/clean-ai-writing <your text>` in Claude Code.
 [Cowork](https://www.anthropic.com/cowork) loads skills only from **installed plugins** — it doesn't scan `~/.claude/skills/`, so a bare clone (the Claude Code steps above) won't be discovered there. This repo doubles as a single-plugin [marketplace](https://code.claude.com/docs/en/plugin-marketplaces), so install it as a plugin instead:
 
 ```bash
-/plugin marketplace add conorbronsdon/avoid-ai-writing
-/plugin install avoid-ai-writing@conorbronsdon-skills
+/plugin marketplace add jeffhuen/avoid-ai-writing
+/plugin install avoid-ai-writing@jeffhuen-skills
 /reload-plugins   # or restart the session, to activate the skill
 ```
 
-In the Cowork desktop app, do the same from **Customize → Plugins → Add marketplace from GitHub** (`conorbronsdon/avoid-ai-writing`), then install **avoid-ai-writing**. The skill auto-triggers from phrases like "remove AI-isms." New releases arrive when the plugin's version is bumped — run `/plugin marketplace update` to pull them.
+In the Cowork desktop app, do the same from **Customize → Plugins → Add marketplace from GitHub** (`jeffhuen/avoid-ai-writing`), then install **avoid-ai-writing**. The skill auto-triggers from phrases like "remove AI-isms." New releases arrive when the plugin's version is bumped — run `/plugin marketplace update` to pull them.
 
 The same plugin install works in Claude Code if you'd rather have a versioned, updatable plugin than the file clone above.
 
@@ -96,16 +103,10 @@ The same plugin install works in Claude Code if you'd rather have a versioned, u
 
 ### OpenClaw
 
-**Option 1: [Install from ClawHub](https://clawhub.ai/conorbronsdon/avoid-ai-writing)**
+This fork is not published to ClawHub. Clone it into the skills directory:
 
 ```bash
-clawhub install avoid-ai-writing
-```
-
-**Option 2: Clone into skills directory**
-
-```bash
-git clone https://github.com/conorbronsdon/avoid-ai-writing ~/.openclaw/skills/avoid-ai-writing
+git clone https://github.com/jeffhuen/avoid-ai-writing ~/.openclaw/skills/avoid-ai-writing
 ```
 
 ### Cursor
@@ -115,7 +116,7 @@ Drop the ported rule into your project's `.cursor/rules/`:
 ```bash
 mkdir -p .cursor/rules
 curl -o .cursor/rules/avoid-ai-writing.mdc \
-  https://raw.githubusercontent.com/conorbronsdon/avoid-ai-writing/main/cursor-rules/avoid-ai-writing.mdc
+  https://raw.githubusercontent.com/jeffhuen/avoid-ai-writing/main/cursor-rules/avoid-ai-writing.mdc
 ```
 
 See [`cursor-rules/README.md`](./cursor-rules/README.md) for activation globs and trigger phrases. Functionally identical to the Claude Code skill — same tier vocabulary, same context profiles, same modes.
@@ -127,7 +128,7 @@ Drop the skill into Hermes's skills directory — it then appears automatically 
 ```bash
 mkdir -p ~/.hermes/skills/writing/avoid-ai-writing
 curl -o ~/.hermes/skills/writing/avoid-ai-writing/SKILL.md \
-  https://raw.githubusercontent.com/conorbronsdon/avoid-ai-writing/main/SKILL.md
+  https://raw.githubusercontent.com/jeffhuen/avoid-ai-writing/main/SKILL.md
 ```
 
 ### OpenAI Codex
@@ -137,7 +138,7 @@ Codex reads [Agent Skills](https://developers.openai.com/codex/skills) in the sa
 ```bash
 mkdir -p .agents/skills/avoid-ai-writing
 curl -o .agents/skills/avoid-ai-writing/SKILL.md \
-  https://raw.githubusercontent.com/conorbronsdon/avoid-ai-writing/main/SKILL.md
+  https://raw.githubusercontent.com/jeffhuen/avoid-ai-writing/main/SKILL.md
 ```
 
 ### Other agents
@@ -402,7 +403,9 @@ Pattern research informed by:
 
 Pull requests get an automated first-pass review from [Qodo Merge](https://github.com/marketplace/qodo-merge-pro-for-open-source), free through Qodo's open source program. Thanks to the Qodo team for supporting OSS maintainers.
 
-Authored by [Conor Bronsdon](https://github.com/conorbronsdon) · [LinkedIn](https://www.linkedin.com/in/conorbronsdon/) · [Chain of Thought podcast](https://chainofthought.show/?utm_source=github&utm_medium=referral&utm_campaign=repo-readme&utm_content=avoid-ai-writing)
+Original project by [Conor Bronsdon](https://github.com/conorbronsdon).
+This fork is maintained by [Jeff Huen](https://github.com/jeffhuen). The full
+upstream history and MIT attribution remain intact.
 
 ## Community / Multilingual
 

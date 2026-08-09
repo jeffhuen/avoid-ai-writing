@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single-file writing skill (`SKILL.md`) that audits and rewrites content to remove AI writing patterns. The skill is a markdown file consumed by AI coding assistants; the repository also includes a dependency-free deterministic detector and test suite.
+A source-aware editorial skill (`SKILL.md`) that audits and rewrites content without treating pattern matches as proof of authorship. The skill is a markdown file consumed by AI coding assistants; the repository also includes a dependency-free deterministic detector and test suite. Read `DIRECTION.md` before changing scope, adding rules, or importing upstream work.
 
 ## Repository structure
 
 - `SKILL.md` — the skill itself. This is the product. All rules, tiers, profiles, and output format live here.
 - `README.md` — public-facing docs, installation instructions, pattern reference table, full before/after example.
 - `CHANGELOG.md` — version history with what changed and why.
+- `DIRECTION.md` — fork purpose, boundaries, upstream policy, and decision record.
+- `provenance/sources.json` — pinned research sources and rule-adoption decisions.
 
 ## How to make changes
 
@@ -19,6 +21,7 @@ Edit `SKILL.md` directly. When making changes:
 - Bump the version in the SKILL.md frontmatter (`version: X.Y.Z`)
 - Run `bash scripts/sync-plugin-skill.sh`. Root SKILL.md is the source of truth; the plugin's bundled copy and `plugin.json`'s version are generated from it, and CI fails on a mismatch. Bumping the frontmatter without this step fails the `check` job with `version mismatch: SKILL.md=X plugin.json=Y`.
 - Run `npm test` to exercise the detector, category contract, validator, corpus helpers, and style checks.
+- Run `npm run sources:check:remote` when reviewing tracked Wikipedia changes. A new revision prompts review and never updates rules automatically.
 - Add a dated entry to CHANGELOG.md
 - Update README.md if the change affects installation, usage, feature list, or pattern count
 - The pattern count lives in **one** place — the README "61 pattern categories" bullet — and is derived from SKILL.md's detection `###` entries. Don't restate it elsewhere; CI (`scripts/check-pattern-count.sh`) fails the build if the README number drifts from SKILL.md, so just add the new `###` entry and bump the README bullet.
@@ -36,6 +39,7 @@ The skill has three modes (`rewrite` default, `detect` flag-only, `edit` in-plac
 ## Key constraints
 
 - The skill must remain a single `SKILL.md` file with agentskills.io-compatible frontmatter
+- New rules must satisfy the admission test in `DIRECTION.md`; source catalog growth is not a reason to grow the detector
 - Word replacement table entries need specific alternatives, not just "rephrase"
 - The self-reference escape hatch (quoted examples exempt from flagging) must be preserved — without it the skill flags its own documentation
 - Technical-blog profile has explicit word table exceptions (e.g., "robust" and "ecosystem" are legitimate in technical contexts)

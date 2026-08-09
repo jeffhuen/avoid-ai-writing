@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 
 ---
 
+## [4.0.0] — 2026-08-09
+
+### Added
+
+- **A separate editorial direction for the fork.** `DIRECTION.md` records why
+  the fork exists, how upstream changes are selected, what a new rule must
+  establish, and how project profiles may eventually replace narrower voice
+  skills.
+- **Rendered Markdown analysis.** `analyzeText(text, { sourceMode:
+  'rendered-markdown' })` masks YAML frontmatter and HTML comments without
+  changing later issue offsets. Plain-text behavior remains the default.
+- **Pinned research provenance.** `provenance/sources.json` records the reviewed
+  Wikipedia revisions, the `blader/humanizer` commit, adoption decisions, and
+  explicit deferrals. `npm run sources:check:remote` reports source drift but
+  never imports rules automatically.
+
+### Changed
+
+- Package and marketplace metadata now identify this fork. The npm package is
+  private until the fork has a deliberate release policy.
+- Inherited upstream release and promotional-drift jobs are disabled outside
+  `conorbronsdon/avoid-ai-writing`; tests continue to run in this fork.
+
 ## [3.23.1] — 2026-08-05
 
 ### Fixed
