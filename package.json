@@ -1,6 +1,6 @@
 {
   "name": "@jeffhuen/avoid-ai-writing-detector",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "private": true,
   "description": "Source-aware editorial detector for AI-associated writing patterns.",
   "license": "MIT",
@@ -11,13 +11,17 @@
   "main": "detector/patterns.js",
   "files": [
     "detector/patterns.js",
-    "detector/validate.js"
+    "detector/validate.js",
+    "detector/audit.js",
+    "profiles/investigative-nonfiction.json",
+    "profiles/README.md"
   ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "test": "node detector/patterns.test.js && node detector/categories.test.js && node detector/validate.test.js && node scripts/corpus.test.js && node scripts/check-style.test.js && node scripts/check-sources.js",
+    "test": "node detector/patterns.test.js && node detector/audit.test.js && node detector/categories.test.js && node detector/validate.test.js && node scripts/corpus.test.js && node scripts/check-style.test.js && node scripts/check-sources.js",
+    "audit": "node detector/audit.js",
     "self-scan": "node scripts/self-scan.js",
     "self-scan:check": "node scripts/self-scan.js --check",
     "corpus": "node scripts/corpus.js list",

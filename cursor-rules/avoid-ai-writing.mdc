@@ -1,5 +1,5 @@
 ---
-description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v4.0.0. See https://github.com/jeffhuen/avoid-ai-writing.
+description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v5.0.0. See https://github.com/jeffhuen/avoid-ai-writing.
 globs: ["**/*.md", "**/*.mdx", "**/*.txt", "**/*.rst", "**/*.adoc"]
 alwaysApply: false
 ---
@@ -9,15 +9,15 @@ alwaysApply: false
 
 # Avoid AI Writing — Audit & Rewrite
 
-You are editing content to remove AI writing patterns ("AI-isms") that make text sound machine-generated.
+You are editing prose to remove generic or mechanical habits while preserving its information, voice, genre, and project rules.
 
 ## What this skill is and isn't
 
-This is a **writing-quality tool**, not a verdict. The patterns flagged here are statistically more common in LLM output, but humans on autopilot — especially writing under deadline pressure, in unfamiliar genres, or in a second language — produce the same shapes. Independent audits of commercial AI detectors have found false-positive rates above 60% on non-native English writers (Liang et al., Stanford, *Patterns* 2023) and overall misclassification rates above 70% on open-source detectors (Jabarian & Imas, BFI Working Paper 2025-116, 2025). Adversarial paraphrase reduces detection accuracy by ~88% across every method tested (arXiv:2506.07001, 2025).
+This is a **writing-quality tool**, not an authorship verdict. Humans writing under deadline pressure, in unfamiliar genres, or in a second language produce many of the same shapes. Independent audits of commercial AI detectors have found false-positive rates above 60% on non-native English writers (Liang et al., Stanford, *Patterns* 2023) and overall misclassification rates above 70% on open-source detectors (Jabarian & Imas, BFI Working Paper 2025-116, 2025). Adversarial paraphrase reduces detection accuracy by about 88% across every method tested (arXiv:2506.07001, 2025).
 
-The patterns are useful as a signal — both for cleaning up your own writing and for assessing whether a piece reads as AI-generated. Just don't make them the sole basis for a consequential decision (academic integrity, hiring, publication, attribution). Several rules here also fire on second-language writing, deadline-pressed humans, and technical genres that compress vocabulary by design. Pair the signal with context: who wrote it, what genre, what the writer's normal voice looks like, what other evidence you have.
+The inherited composite score performs at chance on this fork's paragraph corpus. It remains available for compatibility and research, not as a publication, academic-integrity, hiring, or attribution gate. Project profiles use an unscored editorial audit. Several rules also fire on technical genres that compress vocabulary by design, so genre and the writer's established voice govern every judgment.
 
-In short: signals, not proof. Worth acting on; not worth ruining someone's day over.
+The catalog supplies questions for an editor. It does not identify an author.
 
 ## Modes
 
@@ -37,7 +37,21 @@ Trigger detect mode when the user says "detect," "flag only," "audit only," "jus
 
 **Invocation.** Natural language is enough ("rewrite this in a blunt voice for LinkedIn," "edit `post.md` in place," "scan this, don't rewrite"). Power users can also pass explicit options, which map to the sections below: `[--mode rewrite|detect|edit]`, `[--voice casual|professional|technical|warm|blunt]`, `[--context linkedin|blog|technical-blog|investor-email|docs|casual]`, `[--source plain|rendered-markdown]`, `[--file PATH]`, `[--iterate N]` (max 2), `[--style CONFIG|GUIDE]`.
 
-**Source view.** Use `--source rendered-markdown` when the input is a Markdown source file and the audit should judge only what a reader sees. Ignore YAML frontmatter and HTML comments in the audit and rewrite. The detector masks both while preserving later character offsets. `plain` remains the default for pasted prose and backward compatibility.
+**Source view.** Use `--source rendered-markdown` when the input is a Markdown source file and the audit should judge only what a reader sees. Ignore YAML frontmatter and HTML comments in the audit and rewrite. A project profile may also protect headings, every blockquote, inline quotations, tables, and code. The masks preserve later character offsets. `plain` remains the default for pasted prose and backward compatibility.
+
+## Project editorial profiles
+
+A project profile outranks the generic catalog. Read it before auditing or rewriting, then apply its layers in this order:
+
+1. **Protected material.** Exclude source-only comments and metadata, quotations, headings, tables, code, or other material the profile marks as reader-owned or non-prose.
+2. **Hard rules.** These are exact project laws. They may fail a check.
+3. **Positive craft.** Preserve the project's scene work, argument shape, pacing, humor, tension, terminology, and authorial distance. Negative rules cannot define a voice.
+4. **Project advisories.** Review these with judgment. They do not fail a check.
+5. **Generic patterns.** Treat the catalog below as unscored suggestions. A generic finding never overrides a project rule or forces an edit.
+
+For long-form work, use the space the reader's experience requires. Do not optimize prose for token count or remove a sentence that carries scene, character, tension, orientation, rhythm, humor, emotional pressure, transition, or motif. Compression advice written for posts and emails does not govern narrative prose.
+
+The honesty layer travels across genres. Never invent biography, feelings, scenes, quotations, expertise, motives, numbers, or authority. Replace puffery with the fact that earns the claim. If the record does not establish a detail, name the limit or leave a verification marker according to the project's rules.
 
 **Iterate to convergence (optional).** Rewrite mode already runs one corrective second pass (see Output format) — that built-in pass *is* pass 2, so `--iterate` does not stack on top of it. When the writer asks to "iterate," "keep going until it's clean," or passes `--iterate N`, repeat the audit→rewrite cycle until no patterns remain or **N passes** are reached. Cap **N at 2**: a rewrite plus one corrective pass clears the flagged patterns, and a third pass costs a full regeneration while rarely finding more. Report how many passes it took ("converged in 2 passes").
 
@@ -82,7 +96,7 @@ In **edit** mode, your job is to:
 
 ### Words and phrases to replace
 
-Words are organized into three tiers based on how reliably they signal AI-generated text. This tiered approach — adapted from [brandonwise/humanizer](https://github.com/brandonwise/humanizer)'s vocabulary research — reduces false positives on words that are fine in isolation but suspicious in clusters.
+Words are organized into three tiers based on editorial value and inherited frequency claims. The tiers help an editor distinguish a strong generic-language prompt from ordinary words that matter only when they cluster. They do not establish authorship. The structure is adapted from [brandonwise/humanizer](https://github.com/brandonwise/humanizer).
 
 - **Tier 1 — Always flag.** These words appear 5–20x more often in AI text than human text. Replace on sight.
 - **Tier 2 — Flag in clusters.** Individually fine, but two or more in the same paragraph is a strong AI signal. Flag when they appear together.
@@ -246,7 +260,7 @@ These are normal words. Only flag them when the text is saturated with them — 
 
 #### Tier 3 phrases — Flag at density or in clusters
 
-Multi-word boilerplate that's individually unobjectionable but stacks heavily in AI-generated content (crypto, web3, DePIN, AI/infra reviews are the worst offenders). Flag at **2+ uses of the same phrase** (the per-phrase rule — lower threshold than single-word Tier 3 because a two-word match repeated twice is already stronger evidence than re-using "significant"), *plus* a **cluster rule**: three or more *distinct* phrases from this table in one piece is a strong signal even when each phrase only appears once — that's the shape LLMs take when they vary their own boilerplate to seem less repetitive.
+Multi-word boilerplate is often unobjectionable once and numbing in clusters. Crypto, web3, DePIN, and AI infrastructure reviews are common habitats. Flag **2+ uses of the same phrase**, plus a cluster of three or more distinct phrases from this table in one piece. The editorial problem is repeated abstraction, regardless of who produced it.
 
 | Phrase | What to do |
 |---|---|
@@ -356,7 +370,7 @@ These slot-fill constructions signal that a sentence was generated, not written.
 
 ### Chatbot artifacts
 - "I hope this helps!", "Certainly!", "Absolutely!", "Great question!", "Feel free to reach out," "Let me know if you need anything else" — these are conversational tics from chat interfaces, not writing. Remove entirely.
-- Also watch for: "In this article, we will explore…" or "Let's dive in!" — these are AI-generated meta-narration. Cut or rewrite with a direct opening.
+- Also watch for: "In this article, we will explore…" or "Let's dive in!" These are generic meta-narration. Cut or rewrite with a direct opening.
 
 ### "Let's" constructions
 - "Let's explore," "Let's take a look," "Let's break this down," "Let's examine" — AI uses "let's" as a false-collaborative opener to ease into a topic. It's filler that delays the actual point. Just start with the point. "Let's dive in" is covered above under chatbot artifacts, but the pattern is broader than that — flag any "let's + verb" that's functioning as a transition rather than a genuine invitation to act.
@@ -408,7 +422,7 @@ These slot-fill constructions signal that a sentence was generated, not written.
 - When the model lacks a fact, it fills the gap with hedged speculation dressed up as background: "maintains a relatively low public profile," "is believed to have," "likely began his career in," "appears to have studied." These are guesses formatted as statements. Distinct from cutoff disclaimers, which *admit* the gap — this one hides it behind plausible-sounding filler, which is worse because the reader can't tell what's known from what's invented. Cut the speculation, or replace it with a sourced fact. Adapted from `blader/humanizer` P21.
 
 ### Unfilled placeholders
-- Bracketed slot-fillers that were meant to be replaced before publishing: `[Your Name]`, `[INSERT SOURCE URL]`, `[Describe the specific section]`, `2025-XX-XX`, `<!-- Add citation if available -->`. These are near-definitive evidence that AI-generated boilerplate was pasted without editing. Humans use placeholders in templates too, but rarely ship them. Treat any visible placeholder as a publishing bug: fill it in with real content or delete the sentence entirely.
+- Bracketed slot-fillers that were meant to be replaced before publishing: `[Your Name]`, `[INSERT SOURCE URL]`, `[Describe the specific section]`, `2025-XX-XX`, `<!-- Add citation if available -->`. Treat any visible placeholder as a publishing bug: fill it in with real content or delete the sentence entirely.
 - Catch the obvious shapes: `\[(?:Your|Insert|Add|Enter|Describe|Specify|Choose)[^\]]+\]`, `\b\d{4}-XX-XX\b`, HTML/Markdown comments with placeholder verbs (`add`, `fill in`, `todo`, `insert`).
 
 ### Chatbot citation markup leaks
@@ -535,36 +549,36 @@ These slot-fill constructions signal that a sentence was generated, not written.
 
 ### Rhythm and uniformity
 
-These aren't individual word or phrase problems — they're patterns in how the text flows as a whole. AI text is metronomic; human text has varied rhythm.
+These aren't individual word or phrase problems. They concern how the text flows as a whole. Metronomic prose tires a reader, while deliberate variation carries emphasis and pace.
 
-**Structure is the #1 detection signal.** AI detection tools (including Pangram, which trains a classifier on 28M human documents) weight structural regularity higher than vocabulary. Consistent sentence construction, uniform pacing, and symmetrical phrasing patterns are harder to mask than swapping out a few flagged words. If you fix every word on the Tier 1 list but leave the rhythm untouched, the text still reads as AI-generated.
+**Structure matters more than word substitution.** Replacing vocabulary cannot repair uniform pacing, repeated sentence construction, or symmetrical phrasing. Read the passage for movement and cadence after the word-level edit.
 
 - **Sentence length uniformity**: If most sentences are 15–25 words, the text sounds robotic. Mix short punchy sentences (3–8 words) with longer flowing ones (20+). Fragments work. Questions break the monotony.
 - **Paragraph length uniformity**: If every paragraph is 3–5 sentences and roughly the same size, vary deliberately. Some paragraphs should be one sentence. Some should be longer.
-- **Vocabulary repetition vs. synonym cycling**: AI either repeats the same word mechanically or cycles through synonyms conspicuously. Human writers repeat when the word is right and vary when it's natural — there's no formula.
-- **Read-aloud test**: If the text sounds like it could be read by a text-to-speech engine without sounding weird, it's probably too uniform. Human writing has rhythm that resists robotic delivery.
-- **Missing first-person perspective**: Where appropriate, the writer should have opinions, preferences, and reactions. AI is relentlessly neutral. If the piece is supposed to have a voice, the absence of "I think," "in my experience," or a stated preference is itself an AI tell.
-- **Over-polishing**: Aggressively editing out every irregularity can push human writing *toward* AI statistical profiles. Natural disfluency, idiosyncratic word choices, and uneven pacing are what keep text out of the "AI-generated" classification. Don't sand away all personality in pursuit of clean prose. This skill should make writing sound more human, not less — if you apply every rule at maximum strictness, you risk creating the very uniformity you're trying to avoid.
+- **Vocabulary repetition vs. synonym cycling**: Repeat the right word when precision matters. Vary it when the meaning changes, not to avoid repetition by itself.
+- **Read-aloud test**: Read for a cadence that fits the genre. Rewrite the stretches whose rhythm makes every sentence feel interchangeable.
+- **Missing authorial stance**: Preserve opinions, preferences, and reactions when the writer supplied them and the genre permits them. Deliberately impersonal work does not need first person, and the editor must never invent it.
+- **Over-polishing**: Aggressively editing out every irregularity can erase the writer's cadence. Preserve intentional roughness, idiosyncratic word choices, and uneven pacing when they carry the voice. Applying every generic rule at maximum strictness creates the uniformity this section warns against.
 
 ### Vocabulary diversity (stylometric)
 
-In longer pieces (200+ words), look at how much vocabulary the text actually uses. The type-token ratio (TTR) — distinct word types divided by total tokens — is a classical stylometric signal that's easy to read by eye. Human prose at this length usually lands somewhere around 0.50–0.65 in English. AI text trends flatter, sometimes drifting under 0.40 when the model gets locked on a small vocabulary loop.
+In longer pieces (200+ words), look at how much vocabulary the text uses. The type-token ratio (TTR), distinct word types divided by total tokens, is a classical stylometric measure. The bundled analyzer conservatively flags samples under 0.40 for review.
 
-A very low TTR is not by itself proof of AI authorship — narrow topics, technical reference material, and second-language writing all legitimately compress vocabulary. But on general prose where you'd expect range (essays, articles, social content over ~200 words), a TTR below 0.40 is worth a second look. The fix is rarely to thesaurus the text; it's to broaden the *what* — name specific things, cite specific cases, replace a re-used abstract noun with the concrete instance behind it.
+A very low TTR is not an authorship finding. Narrow topics, technical reference material, and second-language writing all compress vocabulary. On general prose where range would help, a TTR below 0.40 can prompt a second look. The fix is rarely a thesaurus. Broaden the *what*: name specific things, cite specific cases, or replace a reused abstract noun with the concrete instance behind it.
 
 This is the first of four stylometric signals on the roadmap. The others (sentence-length burstiness as a continuous measure, function-word z-scores against a human-prose reference, POS-bigram log-odds) require either a POS tagger or a reference distribution and aren't implemented as detector categories yet.
 
 ### Paragraph-reshuffle immunity (structure test)
-- A writer-side diagnostic, not a regex: can you swap two body paragraphs without breaking the piece? If the order doesn't matter, you've written a list of points, not an argument that builds. AI prose often fails this — each paragraph is a self-contained module with no load-bearing connection to its neighbors.
+- A writer-side diagnostic, not a regex: can you swap two body paragraphs without breaking the piece? If the order doesn't matter, you may have written a list of points instead of an argument that builds. The test targets self-contained modules with no necessary connection to their neighbors.
 - The fix is structural, not lexical: establish a through-line where each paragraph depends on the one before it. If the paragraphs are genuinely independent, decide whether the piece should be an explicit list, or whether it's missing a thesis. Adapted from `Aboudjem/humanizer-skill` P38.
 
 ### Treadmill effect / low information density (content test)
-- Another writer-side test: read each paragraph and ask "what's actually new here?" AI prose frequently restates the premise in fresh words instead of advancing it — lots of motion, no distance covered. The tell is that you could cut 40-60% and lose no information.
+- Another writer-side test: read each paragraph and ask "what's actually new here?" Generic prose restates the premise in fresh words instead of advancing it. The tell is that a large cut loses no information or reader experience.
 - The fix: for each paragraph, name the one fact, claim, or turn it contributes. If there isn't one, cut it. If there is, lead with it and drop the throat-clearing. Adapted from `Aboudjem/humanizer-skill` P43.
 
 ### When to rewrite from scratch vs. patch
 
-If the text has 5+ flagged vocabulary hits across multiple categories, 3+ distinct pattern categories triggered, and uniform sentence/paragraph length, patching individual phrases won't fix it — the structure itself is AI-generated. Advise a full rewrite: state the core point in one sentence, then rebuild from there.
+If the text has 5+ vocabulary hits across multiple categories, 3+ distinct pattern categories, and uniform sentence or paragraph length, patching phrases may not fix it. The structure itself is generic. Advise a full rewrite: state the core point in one sentence, then rebuild from there.
 
 ---
 
@@ -768,11 +782,11 @@ The goal is writing that sounds like a person wrote it. Direct. Specific. The wr
 Five principles for human-sounding rewrites:
 1. **Vary sentence length** — mix short with long. Fragments are fine.
 2. **Be concrete** — replace vague claims with numbers, names, dates, or examples.
-3. **Have a voice** — where appropriate, use first person, state preferences, show reactions.
-4. **Cut the neutrality** — humans have opinions. If the piece is supposed to take a position, take it.
+3. **Preserve the voice** — keep first person, preferences, and reactions only when the source or project supplies them.
+4. **Keep the position** — if the source takes a position, do not neutralize it.
 5. **Earn your emphasis** — don't tell the reader something is interesting. Make it interesting.
 
-Removal is half the job. A rewrite that clears every flag but reads sterile — even sentence lengths, no stance, no first person where one belongs — is still recognizably machine output. When the genre carries a voice (essays, posts, personal writing), put voice back on purpose: a reaction, a stated preference, an aside, one thought left unresolved. For encyclopedic, technical, or legal text, neutral and plain is the correct human voice; don't inject personality there. Adapted from `blader/humanizer` ("Personality and soul").
+Removal is half the job. A rewrite that clears every flag but reads sterile has failed. Preserve the reactions, preferences, asides, and unresolved thoughts the writer supplied. Do not manufacture them. For encyclopedic, technical, legal, or deliberately impersonal work, neutral and plain may be the intended voice. Adapted from `blader/humanizer` ("Personality and soul").
 
 If the original writing is already strong, say so and make only the necessary cuts. Don't over-edit for the sake of it.
 

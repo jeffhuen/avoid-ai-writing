@@ -42,6 +42,15 @@ test('text under 10 words returns tooShort flag', () => {
   assert.equal(r.label, 'Too short');
 });
 
+test('editorial purpose never returns an authorship score, including early exits', () => {
+  for (const text of ['', 'Too short for a normal score.', 'word '.repeat(10001)]) {
+    const r = AIDetector.analyzeText(text, { purpose: 'editorial' });
+    assert.equal(r.score, null);
+    assert.equal(r.label, 'Editorial audit');
+    assert.equal(r.document_classification, 'UNSCORED');
+  }
+});
+
 test('text over 10k words returns tooLong flag', () => {
   const r = AIDetector.analyzeText('word '.repeat(10001));
   assert.equal(r.tooLong, true);
@@ -137,6 +146,57 @@ test('blockquote masking preserves issue offsets in the original source', () => 
 
   assert.ok(transition, 'reader-facing prose after the quote should still be analyzed');
   assert.equal(transition.index, quote.length);
+});
+
+test('editorial profile protects reader-owned Markdown', () => {
+  const text = [
+    '# This Is What You Voted For',
+    '',
+    '> Moreover, this seamless landscape is a testament to progress.',
+    '',
+    'The witness said, "Moreover, this seamless result is a testament to progress."',
+    '',
+    '| Claim | Source |',
+    '| --- | --- |',
+    '| A seamless result | A testament to progress |',
+    '',
+    'The editor compared the transcript with the recording before publishing the correction.',
+  ].join('\n');
+  const r = AIDetector.analyzeText(text, {
+    purpose: 'editorial',
+    sourceMode: 'rendered-markdown',
+    protected: { blockquotes: 'all', headings: true, inlineQuotes: true, tables: true, code: true },
+  });
+
+  assert.equal(r.score, null);
+  assert.equal(r.label, 'Editorial audit');
+  assert.equal(r.document_classification, 'UNSCORED');
+  assert.equal(r.issues.some((issue) => ['title-case-header', 'tier1', 'transition'].includes(issue.type)), false);
+  assert.equal(r.stats.quotedLines, 1);
+  assert.equal(r.stats.maskedHeadings, 1);
+  assert.equal(r.stats.maskedInlineQuotes, 1);
+  assert.equal(r.stats.maskedTables, 3);
+});
+
+test('protected Markdown masking preserves later offsets', () => {
+  const protectedText = '# A Deliberately Pivotal Heading\r\n\r\n> Moreover, the quoted claim is seamless.\r\n\r\n';
+  const prose = 'Moreover, the editor checked the original document before changing the published account.';
+  const r = AIDetector.analyzeText(protectedText + prose, {
+    purpose: 'editorial',
+    sourceMode: 'rendered-markdown',
+    protected: { blockquotes: 'all', headings: true },
+  });
+  const transition = r.issues.find((issue) => issue.type === 'transition');
+
+  assert.ok(transition);
+  assert.equal(transition.index, protectedText.length);
+});
+
+test('ignored issue types remain visible in stats but leave the audit', () => {
+  const text = 'Moreover, the editor reviewed the entire document before issuing a careful correction to the public record.';
+  const r = AIDetector.analyzeText(text, { purpose: 'editorial', ignoreTypes: ['transition'] });
+  assert.equal(r.issues.some((issue) => issue.type === 'transition'), false);
+  assert.deepEqual(r.stats.ignoredTypes, ['transition']);
 });
 
 test('invalid source mode falls back visibly to plain mode', () => {

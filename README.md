@@ -7,7 +7,7 @@ Audit & rewrite content to remove AI writing patterns. A practical skill for any
 [![GitHub stars](https://img.shields.io/github/stars/jeffhuen/avoid-ai-writing?style=social)](https://github.com/jeffhuen/avoid-ai-writing/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-<img src="docs/demo.gif" alt="The bundled detector engine flagging 13 AI-writing patterns by category in a sample paragraph, then scoring the clean rewrite 0/100" width="800">
+<img src="docs/demo.gif" alt="The bundled detector engine flagging AI-writing patterns by category in a sample paragraph" width="800">
 </div>
 
 ---
@@ -45,11 +45,24 @@ A one-shot "make this sound human" prompt catches the obvious stuff. This skill 
 
 - **Structured audit** — returns identified issues with quoted text, the rewrite, a change summary, and a second-pass audit in four discrete sections. You see exactly what changed and why.
 - **Two-pass detection** — the second pass re-reads the rewrite and catches patterns that survive the first edit: recycled transitions, lingering inflation, copula swaps that snuck through.
-- **112-entry word replacement table across 3 tiers + 10 Tier 3 phrases** — not vibes-based. Every flagged word has a specific, plainer alternative. "Leverage" → "use." "Commence" → "start." Tier 1 words always flag, Tier 2 words flag when they cluster, Tier 3 words flag only at high density. Tier 1 itself splits into **1A frequency markers** (`delve`, `tapestry`) and **1B clarity edits** (`in order to`, `utilize`) — same fix, but only 1A is evidence about how a passage was produced, and 1B is weighted lower so a wordiness fix cannot push a document toward an AI classification. Tier 3 *phrases* (multi-word boilerplate like "the integration of," "decentralized compute") flag on per-phrase repetition or when 3+ distinct phrases stack in one piece — the LLM-self-varies-boilerplate shape.
+- **112-entry word replacement table across 3 tiers + 10 Tier 3 phrases** — every flagged word has a plainer alternative. "Leverage" → "use." "Commence" → "start." Tier 1 words always prompt review, Tier 2 words matter when they cluster, and Tier 3 words matter at high density. Tier 1 splits inherited frequency markers from clarity edits, so ordinary wordiness is never presented as authorship evidence.
 - **61 pattern categories** — representative examples below, each with before/after. Includes structural detection (hashtag stuffing, bare-NP bullet lists, hedge-stacked predictions), AI-tool fingerprints (placeholders, citation markup, UTM params), rhythm/uniformity checks, conversational-register tells, and writer-side tests. The full catalog lives in [`SKILL.md`](./SKILL.md); this count is enforced against it in CI.
 - **Detect mode** — flag patterns without rewriting. See which flags are real problems vs. judgment calls. Useful when patterns might be intentional or you're auditing content you don't want altered.
-- **Rendered Markdown mode** — ignore YAML frontmatter and HTML comments while keeping issue offsets aligned with the source file.
+- **Unscored editorial mode** — generic findings remain suggestions. Only hard rules named by a project profile can fail a check.
+- **Protected Markdown** — profiles can ignore frontmatter, comments, headings, blockquotes, inline quotations, tables, and code while keeping issue offsets aligned with the source file.
+- **Project profiles** — combine protected material, hard rules, project advisories, and positive craft guidance. The included investigative-nonfiction profile preserves narrative value and never optimizes for token count.
+- **Rule provenance** — every catalog category maps to a named upstream section; adaptations from Wikipedia and `blader/humanizer` name their source sections and rationale.
 - **Works across platforms** — one `SKILL.md` runs in Claude Code, Cowork (as a plugin), OpenClaw, and Cursor (as a ported rule). See the install paths below.
+
+### Deterministic project audit
+
+```bash
+node detector/audit.js \
+  --profile profiles/investigative-nonfiction.json \
+  path/to/prose
+```
+
+Add `--check` when a profile's hard rules should set the exit code. Generic pattern suggestions remain unscored and never fail the command. `--hard-only` suppresses advisories for a quiet CI check. Add `--json` for structured output.
 
 ## Installation & Usage
 
@@ -319,7 +332,7 @@ Two writer-side **tests** round out the catalog (judgment checks, not auto-detec
 
 **What the skill caught:** chatbot artifacts (Certainly!, Feel free to reach out), 3 em dashes, promotional language (vibrant, nestled, thriving), significance inflation (watershed moment), copula avoidance (serves as, featuring, boasting, presenting), 10 word replacements (landscape, robust, seamless, paradigm, streamline, empower, foster, utilize, ascertain, endeavor), synonym cycling (developers/practitioners/builders/engineers), negative parallelism (It's not just X, it's Y), notability name-dropping (Sequoia, a16z, YC, Index stacked for credibility), vague attributions (Experts believe, Studies show), filler phrases (In order to, Moreover), inline-header list with emoji, superficial -ing analysis (symbolizing... reflecting... highlighting...), formulaic challenges (Despite challenges... continues to thrive), generic conclusion (the future looks bright, only time will tell), false range implied in the adoption bullet.
 
-That's 35+ AI tells.
+That's 35+ generic or mechanical habits in one sample.
 
 ## Run the detector
 
@@ -328,7 +341,7 @@ The skill ships a deterministic, zero-dependency detection engine in
 describe, as runnable code. It works in Node (`>=18`) and the browser with no
 build step.
 
-It's also the single source of the numeric score: the skill itself (and `detect` mode) report *which* patterns are present and how severe (P0/P1/P2), and the engine is what turns those into one computed 0–100 `score`. There's deliberately no second, prose-estimated score in `SKILL.md` — one scorer, not two.
+Legacy classification mode computes a 0–100 research score. Project work uses editorial purpose, which returns findings with `score: null` and no authorship classification.
 
 ```bash
 npm test          # run the detector's fixtures (no deps to install)
@@ -336,7 +349,7 @@ npm test          # run the detector's fixtures (no deps to install)
 
 ```js
 const AIDetector = require("./detector/patterns.js");
-const { score, label, issues } = AIDetector.analyzeText("Your text here…");
+const { label, issues } = AIDetector.analyzeText("Your text here…", { purpose: "editorial" });
 ```
 
 See [`detector/README.md`](./detector/README.md) for the full `analyzeText` API
@@ -396,7 +409,7 @@ behind that line is public.
 
 Pattern research informed by:
 - [Pangram Labs](https://www.pangram.com/) AI detection research — structural regularity insights, vocabulary flags from a decoder-only classifier trained on 28M human documents
-- Wikipedia's [Signs of AI-generated text](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) documentation — the canonical reference for AI writing tells, maintained by Wikipedia editors
+- Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) page, used as a living descriptive index with its Wikipedia-specific scope preserved
 - [blader/humanizer](https://github.com/blader/humanizer) Claude Code skill
 - [brandonwise/humanizer](https://github.com/brandonwise/humanizer) — tiered vocabulary system, statistical analysis research (burstiness, sentence length variation, trigram repetition), and rewrite philosophy
 - [OpenClaw](https://github.com/openclaw/openclaw) humanizer skill ecosystem — community patterns and vocabulary research

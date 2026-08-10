@@ -4,6 +4,33 @@ All notable changes to this project are documented here.
 
 ---
 
+## [5.0.0] — 2026-08-09
+
+### Added
+
+- **Unscored editorial purpose.** The inherited classifier remains available
+  for compatibility. Project audits return findings without an authorship
+  score or classification.
+- **Protected Markdown profiles.** Profiles may mask headings, every
+  blockquote, inline quotations, tables, and code in addition to frontmatter
+  and HTML comments. Masks preserve source offsets.
+- **Project audit command.** `detector/audit.js` applies protected material,
+  hard rules, project advisories, and generic suggestions. Only hard project
+  rules can fail `--check`.
+- **Investigative-nonfiction profile.** The reusable profile protects narrative
+  craft, authorial distance, and information while rejecting token-count
+  optimization and invented biography.
+- **Complete catalog provenance.** `provenance/rules.json` maps all 61 catalog
+  categories to source sections and records selected adaptations from
+  Wikipedia and `blader/humanizer`.
+
+### Changed
+
+- The skill now treats generic patterns as editorial questions, not authorship
+  evidence. Its maintained paragraph corpus produces ROC-AUC 0.502.
+- Long-form guidance preserves scene, pacing, tension, rhythm, humor, and motif.
+  It no longer imports short-form compression into narrative prose.
+
 ## [4.0.0] — 2026-08-09
 
 ### Added

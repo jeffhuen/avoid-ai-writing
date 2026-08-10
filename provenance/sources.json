@@ -98,6 +98,55 @@
         "wikipedia-ai-cleanup"
       ],
       "reason": "A source revision prompts review. It cannot establish cross-genre usefulness or acceptable false-positive cost."
+    },
+    {
+      "id": "editorial-purpose-unscored",
+      "status": "adopted",
+      "sources": [
+        "wikipedia-signs-ai-writing",
+        "upstream-avoid-ai-writing"
+      ],
+      "reason": "The measured composite score does not separate human and machine paragraphs, so project audits return editorial findings without an authorship score or classification.",
+      "implementation": [
+        "detector/patterns.js",
+        "detector/audit.js"
+      ],
+      "tests": [
+        "detector/patterns.test.js",
+        "detector/audit.test.js"
+      ]
+    },
+    {
+      "id": "protected-reader-owned-material",
+      "status": "adopted",
+      "sources": [
+        "wikipedia-signs-ai-writing",
+        "blader-humanizer"
+      ],
+      "reason": "Quotations, headings, code, and tables may preserve another speaker's language or serve non-prose functions. Profiles can mask them without shifting source offsets.",
+      "implementation": [
+        "detector/patterns.js"
+      ],
+      "tests": [
+        "detector/patterns.test.js",
+        "detector/audit.test.js"
+      ]
+    },
+    {
+      "id": "project-editorial-profiles",
+      "status": "adopted",
+      "sources": [
+        "blader-humanizer",
+        "upstream-avoid-ai-writing"
+      ],
+      "reason": "Negative pattern checks cannot define an author's voice. Profiles carry explicit hard rules, advisory rules, protected material, and positive craft guidance.",
+      "implementation": [
+        "detector/audit.js",
+        "profiles/investigative-nonfiction.json"
+      ],
+      "tests": [
+        "detector/audit.test.js"
+      ]
     }
   ]
 }

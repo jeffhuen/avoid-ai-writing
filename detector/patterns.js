@@ -752,6 +752,114 @@ const AIDetector = (() => {
     return { text: chars.join(''), maskedFrontmatter, maskedHtmlComments };
   }
 
+  function maskRanges(text, ranges) {
+    const chars = text.split('');
+    for (const [start, end] of ranges) {
+      for (let i = start; i < end && i < chars.length; i += 1) {
+        if (chars[i] !== '\n' && chars[i] !== '\r') chars[i] = ' ';
+      }
+    }
+    return chars.join('');
+  }
+
+  function lineRanges(text) {
+    const lines = [];
+    const re = /[^\r\n]*(?:\r\n|\n|\r|$)/g;
+    let match;
+    while ((match = re.exec(text)) !== null && match[0]) {
+      const body = match[0].replace(/[\r\n]+$/, '');
+      lines.push({ text: body, start: match.index, end: match.index + body.length });
+    }
+    return lines;
+  }
+
+  function maskProtectedMarkdown(text, options = {}) {
+    const ranges = [];
+    const lines = lineRanges(text);
+    let quotedLines = 0;
+    let maskedHeadings = 0;
+    let maskedTables = 0;
+    let maskedInlineQuotes = 0;
+
+    const quoteMode = options.blockquotes ?? 'multi';
+    const isQuote = lines.map((line) => /^\s*>\s?/.test(line.text));
+    for (let i = 0; i < lines.length; i += 1) {
+      if (isQuote[i] && (quoteMode === 'all' || (quoteMode === 'multi' && (isQuote[i - 1] || isQuote[i + 1])))) {
+        ranges.push([lines[i].start, lines[i].end]);
+        quotedLines += 1;
+      }
+    }
+
+    if (options.headings) {
+      for (let i = 0; i < lines.length; i += 1) {
+        const atx = /^ {0,3}#{1,6}(?:\s|$)/.test(lines[i].text);
+        const setext = i + 1 < lines.length && /^ {0,3}(?:=+|-+)\s*$/.test(lines[i + 1].text) && lines[i].text.trim();
+        if (atx || setext) {
+          ranges.push([lines[i].start, lines[i].end]);
+          maskedHeadings += 1;
+          if (setext) ranges.push([lines[i + 1].start, lines[i + 1].end]);
+        }
+      }
+    }
+
+    if (options.tables) {
+      for (let i = 1; i < lines.length; i += 1) {
+        if (!/^\s*\|?(?:\s*:?-{3,}:?\s*\|)+(?:\s*:?-{3,}:?\s*)\|?\s*$/.test(lines[i].text)) continue;
+        let start = i - 1;
+        let end = i + 1;
+        while (end < lines.length && /\|/.test(lines[end].text) && lines[end].text.trim()) end += 1;
+        for (let j = start; j < end; j += 1) {
+          ranges.push([lines[j].start, lines[j].end]);
+          maskedTables += 1;
+        }
+        i = end - 1;
+      }
+    }
+
+    if (options.inlineQuotes) {
+      const quoteRe = /“[^”\n]+”|‘[^’\n]+’|"[^"\n]+"/g;
+      let match;
+      while ((match = quoteRe.exec(text)) !== null) {
+        ranges.push([match.index, match.index + match[0].length]);
+        maskedInlineQuotes += 1;
+      }
+    }
+
+    let masked = maskRanges(text, ranges);
+    if (options.code) masked = maskCode(masked);
+    return { text: masked, quotedLines, maskedHeadings, maskedTables, maskedInlineQuotes };
+  }
+
+  function prepareText(text, options = {}) {
+    const VALID_SOURCE_MODES = new Set(['plain', 'rendered-markdown']);
+    const requestedSourceMode = options.sourceMode || 'plain';
+    const sourceMode = VALID_SOURCE_MODES.has(requestedSourceMode) ? requestedSourceMode : 'plain';
+    const sourceModeFallback = requestedSourceMode !== sourceMode ? requestedSourceMode : null;
+    let maskedFrontmatter = 0;
+    let maskedHtmlComments = 0;
+    if (sourceMode === 'rendered-markdown') {
+      const rendered = maskRenderedMarkdown(text);
+      text = rendered.text;
+      maskedFrontmatter = rendered.maskedFrontmatter;
+      maskedHtmlComments = rendered.maskedHtmlComments;
+    }
+
+    const protectedMarkdown = maskProtectedMarkdown(text, options.protected);
+    return {
+      text: protectedMarkdown.text,
+      stats: {
+        sourceMode,
+        sourceModeFallback,
+        maskedFrontmatter,
+        maskedHtmlComments,
+        quotedLines: protectedMarkdown.quotedLines,
+        maskedHeadings: protectedMarkdown.maskedHeadings,
+        maskedTables: protectedMarkdown.maskedTables,
+        maskedInlineQuotes: protectedMarkdown.maskedInlineQuotes,
+      },
+    };
+  }
+
   // ─── Forms that open with `#` but are not social tags ──────────────
   // `#` is overloaded in technical prose and the hashtag rule counts every
   // `#word` it sees, so these are subtracted before the threshold applies:
@@ -916,7 +1024,8 @@ const AIDetector = (() => {
 
   function analyzeText(text, options = {}) {
     if (!text || text.trim().length === 0) {
-      return { ...buildV2Defaults('UNSCORED', 'low'), score: 0, label: 'Empty', issues: [], stats: {}, tooShort: true };
+      const editorial = options.purpose === 'editorial';
+      return { ...buildV2Defaults('UNSCORED', 'low'), score: editorial ? null : 0, label: editorial ? 'Editorial audit' : 'Empty', issues: [], stats: { purpose: editorial ? 'editorial' : 'classification' }, tooShort: true };
     }
 
     // Context mode gates rules that are noisy in technical writing. Modes:
@@ -935,48 +1044,23 @@ const AIDetector = (() => {
     const contextMode = VALID_CONTEXT_MODES.has(requestedMode) ? requestedMode : 'general';
     const contextModeFallback = requestedMode !== contextMode ? requestedMode : null;
 
-    // Source mode separates reader-facing Markdown from its source-only
-    // metadata and editorial comments. Blanking preserves byte offsets for
-    // issue highlights. Plain mode remains the default for compatibility.
-    const VALID_SOURCE_MODES = new Set(['plain', 'rendered-markdown']);
-    const requestedSourceMode = options.sourceMode || 'plain';
-    const sourceMode = VALID_SOURCE_MODES.has(requestedSourceMode) ? requestedSourceMode : 'plain';
-    const sourceModeFallback = requestedSourceMode !== sourceMode ? requestedSourceMode : null;
-    let maskedFrontmatter = 0;
-    let maskedHtmlComments = 0;
-    if (sourceMode === 'rendered-markdown') {
-      const masked = maskRenderedMarkdown(text);
-      text = masked.text;
-      maskedFrontmatter = masked.maskedFrontmatter;
-      maskedHtmlComments = masked.maskedHtmlComments;
-    }
+    const prepared = prepareText(text, options);
+    text = prepared.text;
+    const {
+      sourceMode,
+      sourceModeFallback,
+      maskedFrontmatter,
+      maskedHtmlComments,
+      quotedLines,
+      maskedHeadings,
+      maskedTables,
+      maskedInlineQuotes,
+    } = prepared.stats;
 
-    // Pre-pass: strip Markdown blockquotes before scoring. A human
-    // reacting to AI text by quoting it shouldn't have the quoted block
-    // counted against their own writing. Requires ≥2 consecutive `> `
-    // lines to count as a blockquote — single-line `> ls -la` shell
-    // prompts in technical docs stay in the text.
-    let quotedLines = 0;
-    const rawLines = text.split(/\r?\n/);
-    const isQuote = rawLines.map((l) => /^\s*>\s/.test(l));
-    const stripIdx = new Set();
-    for (let i = 0; i < rawLines.length; i++) {
-      if (isQuote[i] && ((isQuote[i - 1] && i > 0) || isQuote[i + 1])) {
-        stripIdx.add(i);
-        quotedLines++;
-      }
-    }
-    const chars = text.split('');
-    let cursor = 0;
-    for (let i = 0; i < rawLines.length; i += 1) {
-      if (stripIdx.has(i)) {
-        for (let j = cursor; j < cursor + rawLines[i].length; j += 1) chars[j] = ' ';
-      }
-      cursor += rawLines[i].length;
-      if (text[cursor] === '\r') cursor += 1;
-      if (text[cursor] === '\n') cursor += 1;
-    }
-    text = chars.join('');
+    const VALID_PURPOSES = new Set(['classification', 'editorial']);
+    const requestedPurpose = options.purpose || 'classification';
+    const purpose = VALID_PURPOSES.has(requestedPurpose) ? requestedPurpose : 'classification';
+    const purposeFallback = requestedPurpose !== purpose ? requestedPurpose : null;
 
     // Pre-pass: strip bypass-trick chars before pattern matching so
     // "delve" with a Cyrillic 'е' still hits Tier 1. Original text is
@@ -988,20 +1072,20 @@ const AIDetector = (() => {
     if (wordCount < 10) {
       return {
         ...buildV2Defaults('UNSCORED', 'low'),
-        score: 0,
-        label: 'Too short',
+        score: purpose === 'editorial' ? null : 0,
+        label: purpose === 'editorial' ? 'Editorial audit' : 'Too short',
         issues: [],
-        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, maskedFrontmatter, maskedHtmlComments },
+        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, purpose, purposeFallback, maskedFrontmatter, maskedHtmlComments, quotedLines, maskedHeadings, maskedTables, maskedInlineQuotes },
         tooShort: true,
       };
     }
     if (wordCount > MAX_WORDS) {
       return {
         ...buildV2Defaults('UNSCORED', 'low'),
-        score: 0,
-        label: 'Text too long',
+        score: purpose === 'editorial' ? null : 0,
+        label: purpose === 'editorial' ? 'Editorial audit' : 'Text too long',
         issues: [],
-        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, maskedFrontmatter, maskedHtmlComments },
+        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, purpose, purposeFallback, maskedFrontmatter, maskedHtmlComments, quotedLines, maskedHeadings, maskedTables, maskedInlineQuotes },
         tooLong: true,
       };
     }
@@ -1632,7 +1716,8 @@ const AIDetector = (() => {
     // above a list of two items. Now the dedup runs first, then each
     // distinct issue contributes its category weight — so the number
     // reflects the same signals the user actually sees.
-    const deduped = deduplicateIssues(issues);
+    const ignoredTypes = new Set(Array.isArray(options.ignoreTypes) ? options.ignoreTypes : []);
+    const deduped = deduplicateIssues(issues).filter((issue) => !ignoredTypes.has(issue.type));
     for (const issue of deduped) {
       rawScore += ISSUE_WEIGHTS[issue.type] ?? 2;
     }
@@ -1641,7 +1726,7 @@ const AIDetector = (() => {
     const lengthFactor = Math.max(1, Math.log2(wordCount / 50));
     const normalizedScore = Math.min(100, Math.round(rawScore / lengthFactor));
 
-    const label = getLabel(normalizedScore);
+    const label = purpose === 'editorial' ? 'Editorial audit' : getLabel(normalizedScore);
 
     // ── Sentence-region smoothing (HMM-style without an HMM) ─────────
     // Map each text-bearing issue back to its sentence indexes, then
@@ -1676,7 +1761,11 @@ const AIDetector = (() => {
     const hasTransition = deduped.some((i) => i.type === 'transition');
     const denseAIVocab = wordCount >= 150 && tier1Distinct >= 5 && hasTier2Cluster && hasTransition;
 
-    const trinary = classifyTrinary({
+    const trinary = purpose === 'editorial' ? {
+      classification: 'UNSCORED',
+      probabilities: { human: 0.333, mixed: 0.334, ai: 0.333 },
+      confidence: 'low',
+    } : classifyTrinary({
       score: normalizedScore,
       issues: deduped,
       regions,
@@ -1687,7 +1776,7 @@ const AIDetector = (() => {
 
     return {
       // Legacy fields preserved for existing callers.
-      score: normalizedScore,
+      score: purpose === 'editorial' ? null : normalizedScore,
       label,
       issues: deduped,
       stats: {
@@ -1702,10 +1791,16 @@ const AIDetector = (() => {
         contextModeFallback,
         sourceMode,
         sourceModeFallback,
+        purpose,
+        purposeFallback,
         maskedFrontmatter,
         maskedHtmlComments,
         normalization: norm.flags,
         quotedLines,
+        maskedHeadings,
+        maskedTables,
+        maskedInlineQuotes,
+        ignoredTypes: [...ignoredTypes],
         unmappedHighlights: regions._unmapped ?? 0,
         denseAIVocab,
         tier1Distinct,
@@ -1997,6 +2092,7 @@ const AIDetector = (() => {
 
   return {
     analyzeText,
+    prepareText,
     normalizeText,
     getLabel,
     getColor,

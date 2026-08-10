@@ -4,7 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const registryPath = path.join(__dirname, '..', 'provenance', 'sources.json');
+const rulesPath = path.join(__dirname, '..', 'provenance', 'rules.json');
+const skillPath = path.join(__dirname, '..', 'SKILL.md');
 const allowedStatuses = new Set(['adopted', 'adapted', 'covered', 'deferred', 'rejected', 'watch']);
+const allowedRelationships = new Set(['inherited', 'adapted', 'scoped', 'rejected']);
 
 function loadRegistry() {
   return JSON.parse(fs.readFileSync(registryPath, 'utf8'));
@@ -33,6 +36,43 @@ function validateRegistry(registry) {
       if (!ids.has(sourceId)) throw new Error(`unknown source ${sourceId} in decision ${decision.id}`);
     }
     decisionIds.add(decision.id);
+  }
+}
+
+function catalogHeadings(skill) {
+  const start = skill.indexOf('## What to remove or fix');
+  const end = skill.indexOf('\n## Severity tiers', start);
+  if (start < 0 || end < 0) throw new Error('could not locate the SKILL.md rule catalog');
+  return [...skill.slice(start, end).matchAll(/^### (.+)$/gm)]
+    .map((match) => match[1])
+    .filter((heading) => !heading.includes('(structure test)') && !heading.includes('(content test)') && heading !== 'When to rewrite from scratch vs. patch');
+}
+
+function validateRuleMap(ruleMap, registry, skill) {
+  if (ruleMap.schemaVersion !== 1 || !Array.isArray(ruleMap.rules)) throw new Error('invalid provenance/rules.json schema');
+  const sourceIds = new Set(registry.sources.map((source) => source.id));
+  const expected = catalogHeadings(skill);
+  const actual = ruleMap.rules.map((rule) => rule.heading);
+  if (new Set(actual).size !== actual.length) throw new Error('duplicate rule heading in provenance/rules.json');
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`rule provenance drift: SKILL.md has ${expected.length} ordered categories, map has ${actual.length}`);
+
+  const ruleIds = new Set();
+  for (const rule of ruleMap.rules) {
+    if (!rule.id || ruleIds.has(rule.id)) throw new Error(`invalid or duplicate rule id: ${rule.id || '<missing>'}`);
+    if (!Array.isArray(rule.sources) || rule.sources.length === 0) throw new Error(`rule has no sources: ${rule.id}`);
+    for (const source of rule.sources) {
+      if (!sourceIds.has(source.sourceId)) throw new Error(`unknown source ${source.sourceId} in rule ${rule.id}`);
+      if (!source.sourceSection) throw new Error(`missing sourceSection in rule ${rule.id}`);
+      if (!allowedRelationships.has(source.relationship)) throw new Error(`invalid relationship in rule ${rule.id}: ${source.relationship}`);
+    }
+    ruleIds.add(rule.id);
+  }
+
+  for (const adaptation of ruleMap.adaptations || []) {
+    if (!ruleIds.has(adaptation.ruleId)) throw new Error(`unknown adapted rule: ${adaptation.ruleId}`);
+    if (!sourceIds.has(adaptation.sourceId)) throw new Error(`unknown source ${adaptation.sourceId} in adaptation ${adaptation.ruleId}`);
+    if (!adaptation.sourceSection || !adaptation.rationale) throw new Error(`incomplete adaptation: ${adaptation.ruleId}`);
+    if (!allowedRelationships.has(adaptation.relationship)) throw new Error(`invalid adaptation relationship: ${adaptation.relationship}`);
   }
 }
 
@@ -65,7 +105,9 @@ async function checkRemote(registry) {
 async function main() {
   const registry = loadRegistry();
   validateRegistry(registry);
-  console.log(`provenance registry valid: ${registry.sources.length} sources, ${registry.decisions.length} decisions`);
+  const ruleMap = JSON.parse(fs.readFileSync(rulesPath, 'utf8'));
+  validateRuleMap(ruleMap, registry, fs.readFileSync(skillPath, 'utf8'));
+  console.log(`provenance registry valid: ${registry.sources.length} sources, ${registry.decisions.length} decisions, ${ruleMap.rules.length} catalog rules`);
   if (process.argv.includes('--remote')) await checkRemote(registry);
 }
 
@@ -76,4 +118,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { validateRegistry };
+module.exports = { catalogHeadings, validateRegistry, validateRuleMap };

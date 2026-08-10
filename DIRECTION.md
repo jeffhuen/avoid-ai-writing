@@ -23,12 +23,12 @@ This fork therefore adds three layers:
 1. Source-aware analysis separates rendered prose from source-only material.
 2. Rule provenance records where guidance came from, how it was adapted, and
    why it belongs here.
-3. Project profiles will eventually carry positive voice and craft rules, file
-   scopes, exceptions, and mechanical checks.
+3. Project profiles carry positive voice and craft rules, file scopes,
+   protected material, exact hard rules, and advisory checks.
 
-The third layer is the path by which this skill may replace project-specific
-prompt skills such as `plain-voice`. Replacement is an outcome to prove with
-real edits and regression samples. It is not a migration deadline.
+The third layer is the path by which this skill can replace narrower prompt
+skills such as `plain-voice`. A project migrates only after its profile passes
+the project's own regression samples.
 
 ## Rule admission
 
@@ -54,6 +54,8 @@ It will not copy rules merely to enlarge the catalog.
 ## Non-goals
 
 - Claiming that a score identifies who wrote a passage.
+- Using the inherited composite score as a publication gate. On the maintained
+  corpus, paragraph-level ROC-AUC is 0.502, which does not separate the classes.
 - Making every genre sound casual, personal, or irregular.
 - Adding first person, biography, vulnerability, or opinion that the writer did
   not supply.
@@ -68,6 +70,10 @@ It will not copy rules merely to enlarge the catalog.
 - `SKILL.md` remains the portable product and source of truth for its plugin
   copy.
 - `provenance/sources.json` records source snapshots and adoption decisions.
+- `provenance/rules.json` maps every catalog rule to a source section and records
+  selected adaptations from Wikipedia and `blader/humanizer`.
+- `detector/audit.js` runs a project profile. Hard project rules can fail a
+  check; generic pattern suggestions are unscored and cannot.
 - `npm test` validates the detector and the local provenance registry.
 - `npm run sources:check:remote` reports when a tracked Wikipedia page has moved
   beyond the reviewed revision. It never updates rules.
@@ -95,3 +101,16 @@ architecture notes and other material a reader never sees.
 Wikipedia and comparative humanizer projects belong in a visible registry.
 Each resulting rule still needs an independent editorial judgment, a stated
 scope, and regression coverage.
+
+### 2026-08-09: classification and editorial work are separate products
+
+The inherited classifier remains available for compatibility and research.
+Project profiles use editorial purpose, which returns no authorship score or
+classification. Generic findings remain suggestions. Only rules named by the
+project can fail its check.
+
+### 2026-08-09: protect material the writer does not own
+
+Editorial profiles mask frontmatter, HTML comments, headings, blockquotes,
+inline quotations, tables, and code before scanning. The mask preserves source
+offsets. A project may narrow the protection when its genre requires it.

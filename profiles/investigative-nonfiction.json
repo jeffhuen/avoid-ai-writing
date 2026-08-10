@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "name": "Investigative nonfiction",
+  "genericPatterns": "advisory",
+  "analyzer": {
+    "purpose": "editorial",
+    "sourceMode": "rendered-markdown",
+    "contextMode": "general",
+    "protected": {
+      "blockquotes": "all",
+      "headings": true,
+      "inlineQuotes": true,
+      "tables": true,
+      "code": true
+    },
+    "ignoreTypes": [
+      "title-case-header"
+    ]
+  },
+  "hardRules": [],
+  "advisoryRules": [
+    {
+      "id": "acknowledgment-loop",
+      "pattern": "\\b(?:both objections land|all (?:of )?these criticisms land)\\b",
+      "message": "State the judgment without staging agreement."
+    },
+    {
+      "id": "narrated-reaction",
+      "pattern": "\\bhere(?: is|[’']s) the satisfying part\\b",
+      "message": "Let the material create the reaction."
+    },
+    {
+      "id": "internet-vernacular",
+      "pattern": "\\b(?:receipts|rentable)\\b",
+      "message": "Prefer the concrete document, source, or incentive."
+    }
+  ],
+  "guidance": {
+    "purpose": "Protect a documented argument from generic AI habits without flattening its authorial voice.",
+    "positiveCraft": [
+      "Open with a person, scene, or consequential event when the genre allows it.",
+      "Give each section a live question and a reason to continue.",
+      "Preserve useful detail, rhythm, tension, humor, and emotional pressure.",
+      "Let theory arrive through the case instead of interrupting it as a lecture.",
+      "Use the space the reader's experience requires. Do not optimize prose for token count."
+    ],
+    "honesty": [
+      "Do not invent biography, feelings, scenes, quotations, or authority.",
+      "Name uncertainty as a limit in the record, not as decorative hedging.",
+      "Replace puffery with the fact that earns the claim.",
+      "Preserve intentional voice unless a project rule overrides it."
+    ]
+  }
+}
