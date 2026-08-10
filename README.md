@@ -12,18 +12,44 @@ Audit & rewrite content to remove AI writing patterns. A practical skill for any
 
 ---
 
+> [!IMPORTANT]
+> This is an independent maintained fork of
+> [Conor Bronsdon's `avoid-ai-writing`](https://github.com/conorbronsdon/avoid-ai-writing),
+> not an official successor. The original pattern catalog, detector, portable
+> skill, Git history, and MIT license come from that project. Jeff Huen maintains
+> this fork and the work identified below.
 
 A portable writing skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), OpenAI Codex, [OpenClaw](https://github.com/openclaw/openclaw), [Hermes](https://github.com/NousResearch/hermes-agent), and any other [agentskills.io](https://agentskills.io)-compatible agent. Audits and rewrites content to remove AI writing patterns ("AI-isms").
 
-This is Jeff Huen's maintained fork of
-[conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing).
-It is moving toward source-aware, project-aware editorial work that preserves
-voice and genre instead of treating a generic pattern score as an authorship
-test. See [DIRECTION.md](./DIRECTION.md) for the rationale, upstream policy, and
-decision record.
-
 It starts with existing prose. It audits or revises a draft; it does not replace
 a project's drafting or authorial-voice instructions.
+
+## Why this fork exists
+
+The fork began after the upstream tool was tested against an investigative
+nonfiction manuscript. Source-only HTML comments and headings were read as
+prose, while the inherited composite score performed at chance on the
+maintained paragraph corpus (ROC-AUC 0.502). That project needed an editorial
+checker, not an authorship verdict: it had to protect material a reader never
+sees, distinguish house rules from generic suggestions, and preserve scene,
+pacing, and authorial distance.
+
+Those requirements changed the product boundary. The inherited classifier
+remains available for compatibility and research. This fork develops an
+unscored, source-aware editorial path alongside it.
+
+| Upstream foundation | Work maintained in this fork |
+|---|---|
+| Pattern catalog and portable `SKILL.md` | Unscored editorial purpose; generic findings cannot identify an author or fail a project check |
+| Deterministic detector and preservation validator | Rendered-Markdown masking for frontmatter, comments, headings, quotations, tables, and code |
+| Detect, rewrite, and edit modes | Project profiles with protected material, hard rules, advisories, and positive craft requirements |
+| Claude-oriented skill and plugin support | Native Claude and Codex plugin packages generated from the same root skill |
+| Upstream rule research and history | Pinned provenance for selected Wikipedia and `blader/humanizer` adaptations |
+| Continuing upstream development | Weekly upstream review with explicit adopt, adapt, reject, or already-covered decisions; no automatic merges |
+
+The full rationale, non-goals, and upstream policy live in
+[`DIRECTION.md`](./DIRECTION.md). Fork releases and implementation changes are
+listed in [`CHANGELOG.md`](./CHANGELOG.md).
 
 **Three modes:**
 - **Rewrite** (default) — flags AI patterns and rewrites the text to fix them. A built-in second pass catches patterns that survived the first edit.
