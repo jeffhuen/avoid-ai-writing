@@ -22,6 +22,9 @@ voice and genre instead of treating a generic pattern score as an authorship
 test. See [DIRECTION.md](./DIRECTION.md) for the rationale, upstream policy, and
 decision record.
 
+It starts with existing prose. It audits or revises a draft; it does not replace
+a project's drafting or authorial-voice instructions.
+
 **Three modes:**
 - **Rewrite** (default) — flags AI patterns and rewrites the text to fix them. A built-in second pass catches patterns that survived the first edit.
 - **Detect** — flags AI patterns without rewriting. Shows which flags are real problems vs. judgment calls. Useful when patterns might be intentional, when auditing content you don't want altered, or when you just want a quick scan.

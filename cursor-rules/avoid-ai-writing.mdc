@@ -1,5 +1,5 @@
 ---
-description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v5.1.0. See https://github.com/jeffhuen/avoid-ai-writing.
+description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v5.1.1. See https://github.com/jeffhuen/avoid-ai-writing.
 globs: ["**/*.md", "**/*.mdx", "**/*.txt", "**/*.rst", "**/*.adoc"]
 alwaysApply: false
 ---
@@ -18,6 +18,8 @@ This is a **writing-quality tool**, not an authorship verdict. Humans writing un
 The inherited composite score performs at chance on this fork's paragraph corpus. It remains available for compatibility and research, not as a publication, academic-integrity, hiring, or attribution gate. Project profiles use an unscored editorial audit. Several rules also fire on technical genres that compress vocabulary by design, so genre and the writer's established voice govern every judgment.
 
 The catalog supplies questions for an editor. It does not identify an author.
+
+This skill starts with existing prose. It may flag or edit that prose, but it is not a first-draft voice engine and should not be invoked as a mandatory step before writing begins. When a project has a drafting or voice skill, that skill remains the writer. Run this one after the draft exists.
 
 ## Modes
 

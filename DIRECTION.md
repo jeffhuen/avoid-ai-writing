@@ -26,9 +26,9 @@ This fork therefore adds three layers:
 3. Project profiles carry positive voice and craft rules, file scopes,
    protected material, exact hard rules, and advisory checks.
 
-The third layer is the path by which this skill can replace narrower prompt
-skills such as `plain-voice`. A project migrates only after its profile passes
-the project's own regression samples.
+The third layer lets this skill audit prose produced under narrower voice skills
+such as `plain-voice` without pretending to supply that voice. A profile tells
+the checker what to preserve. It does not make the checker a first-draft writer.
 
 ## Rule admission
 
@@ -121,3 +121,10 @@ The portable `SKILL.md` remains the product. Native manifests and marketplace
 files make the same generated skill installable and updatable in Claude and
 Codex. Platform packaging may differ. Editorial behavior may not drift between
 the packages.
+
+### 2026-08-09: checking follows drafting
+
+This skill starts from prose. Detect mode flags it; rewrite and edit modes revise
+it. None of those modes replaces a project's drafting or authorial-voice skill.
+A project profile may encode positive craft so the audit can protect it, but the
+writer remains upstream of the checker.

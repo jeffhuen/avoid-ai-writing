@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [5.1.1] — 2026-08-09
+
+### Changed
+
+- **Writer and checker roles are explicit.** The skill starts from existing
+  prose. Project profiles tell it what to preserve during an audit or revision;
+  they do not replace a first-draft voice skill.
+
 ## [5.1.0] — 2026-08-09
 
 ### Added

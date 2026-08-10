@@ -1,6 +1,6 @@
 {
   "name": "avoid-ai-writing",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "description": "Source-aware prose audit and rewrite that preserves voice, genre, and project rules.",
   "author": {
     "name": "Jeff Huen",

@@ -3,7 +3,7 @@ name: avoid-ai-writing
 description: Audit and rewrite prose to remove AI-associated habits while preserving the writer's information, voice, genre, and project rules. Use when asked to remove AI-isms, clean up AI writing, audit writing for AI tells, preserve a house voice, edit prose in place, or scan rendered Markdown without checking comments and frontmatter.
 license: MIT
 metadata:
-  version: "5.1.0"
+  version: "5.1.1"
   compatibility: Any AI coding assistant that supports agentskills.io SKILL.md format or OpenClaw. No external tools or APIs required.
   author: Jeff Huen (fork; upstream by Conor Bronsdon)
   tags: writing editing voice quality
@@ -23,6 +23,8 @@ This is a **writing-quality tool**, not an authorship verdict. Humans writing un
 The inherited composite score performs at chance on this fork's paragraph corpus. It remains available for compatibility and research, not as a publication, academic-integrity, hiring, or attribution gate. Project profiles use an unscored editorial audit. Several rules also fire on technical genres that compress vocabulary by design, so genre and the writer's established voice govern every judgment.
 
 The catalog supplies questions for an editor. It does not identify an author.
+
+This skill starts with existing prose. It may flag or edit that prose, but it is not a first-draft voice engine and should not be invoked as a mandatory step before writing begins. When a project has a drafting or voice skill, that skill remains the writer. Run this one after the draft exists.
 
 ## Modes
 
