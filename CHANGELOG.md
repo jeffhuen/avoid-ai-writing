@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ---
 
+## [5.1.0] — 2026-08-09
+
+### Added
+
+- **Native Codex plugin packaging.** The fork now ships a Codex manifest,
+  repository marketplace, and skill display metadata beside its Claude plugin.
+  Both packages bundle the same generated `SKILL.md`.
+
+### Changed
+
+- Plugin synchronization and CI now verify both platform manifests and keep the
+  Codex skill metadata aligned with its root source.
+
 ## [5.0.0] — 2026-08-09
 
 ### Added

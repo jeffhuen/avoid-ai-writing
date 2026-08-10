@@ -68,7 +68,7 @@ It will not copy rules merely to enlarge the catalog.
 
 - `origin` is this fork. `upstream` is Conor Bronsdon's repository.
 - `SKILL.md` remains the portable product and source of truth for its plugin
-  copy.
+  copies. The Claude and Codex packages bundle the same generated file.
 - `provenance/sources.json` records source snapshots and adoption decisions.
 - `provenance/rules.json` maps every catalog rule to a source section and records
   selected adaptations from Wikipedia and `blader/humanizer`.
@@ -114,3 +114,10 @@ project can fail its check.
 Editorial profiles mask frontmatter, HTML comments, headings, blockquotes,
 inline quotations, tables, and code before scanning. The mask preserves source
 offsets. A project may narrow the protection when its genre requires it.
+
+### 2026-08-09: one skill, native packages for Claude and Codex
+
+The portable `SKILL.md` remains the product. Native manifests and marketplace
+files make the same generated skill installable and updatable in Claude and
+Codex. Platform packaging may differ. Editorial behavior may not drift between
+the packages.

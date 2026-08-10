@@ -13,13 +13,14 @@ A source-aware editorial skill (`SKILL.md`) that audits and rewrites content wit
 - `CHANGELOG.md` — version history with what changed and why.
 - `DIRECTION.md` — fork purpose, boundaries, upstream policy, and decision record.
 - `provenance/sources.json` — pinned research sources and rule-adoption decisions.
+- `plugins/avoid-ai-writing/` — one bundled skill with native Claude and Codex manifests.
 
 ## How to make changes
 
 Edit `SKILL.md` directly. When making changes:
 
 - Bump the version in the SKILL.md frontmatter (`version: X.Y.Z`)
-- Run `bash scripts/sync-plugin-skill.sh`. Root SKILL.md is the source of truth; the plugin's bundled copy and `plugin.json`'s version are generated from it, and CI fails on a mismatch. Bumping the frontmatter without this step fails the `check` job with `version mismatch: SKILL.md=X plugin.json=Y`.
+- Run `bash scripts/sync-plugin-skill.sh`. Root `SKILL.md` and `agents/openai.yaml` are the sources of truth for the bundled skill. CI also checks the Claude and Codex manifest versions against the skill version.
 - Run `npm test` to exercise the detector, category contract, validator, corpus helpers, and style checks.
 - Run `npm run sources:check:remote` when reviewing tracked Wikipedia changes. A new revision prompts review and never updates rules automatically.
 - Add a dated entry to CHANGELOG.md
@@ -48,4 +49,4 @@ The skill has three modes (`rewrite` default, `detect` flag-only, `edit` in-plac
 
 ## Compatibility
 
-The skill works with Claude Code, OpenClaw/ClawHub, and any agentskills.io-compatible agent. The frontmatter includes both `agentskills_spec` and `openclaw` fields. Changes must not break either format.
+The skill works with Claude Code, Codex, OpenClaw/ClawHub, and any agentskills.io-compatible agent. The repository ships native Claude and Codex marketplace packages. The frontmatter includes both `agentskills_spec` and `openclaw` fields. Changes must not break any of them.

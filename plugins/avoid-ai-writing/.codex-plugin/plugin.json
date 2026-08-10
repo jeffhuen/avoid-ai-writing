@@ -1,0 +1,27 @@
+{
+  "name": "avoid-ai-writing",
+  "version": "5.1.0",
+  "description": "Source-aware prose audit and rewrite that preserves voice, genre, and project rules.",
+  "author": {
+    "name": "Jeff Huen",
+    "url": "https://github.com/jeffhuen"
+  },
+  "homepage": "https://github.com/jeffhuen/avoid-ai-writing",
+  "repository": "https://github.com/jeffhuen/avoid-ai-writing",
+  "license": "MIT",
+  "keywords": ["writing", "editing", "voice", "humanize"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Avoid AI Writing",
+    "shortDescription": "Preserve voice while removing generic AI habits",
+    "longDescription": "Audit and rewrite prose against project rules without treating pattern matches as proof of authorship.",
+    "developerName": "Jeff Huen",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": [
+      "Audit this prose for generic AI habits and preserve its voice.",
+      "Edit this file in place using its project profile.",
+      "Scan rendered Markdown without comments or frontmatter."
+    ]
+  }
+}

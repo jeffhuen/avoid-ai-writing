@@ -3,7 +3,7 @@ name: avoid-ai-writing
 description: Audit and rewrite prose to remove AI-associated habits while preserving the writer's information, voice, genre, and project rules. Use when asked to remove AI-isms, clean up AI writing, audit writing for AI tells, preserve a house voice, edit prose in place, or scan rendered Markdown without checking comments and frontmatter.
 license: MIT
 metadata:
-  version: "5.0.0"
+  version: "5.1.0"
   compatibility: Any AI coding assistant that supports agentskills.io SKILL.md format or OpenClaw. No external tools or APIs required.
   author: Jeff Huen (fork; upstream by Conor Bronsdon)
   tags: writing editing voice quality

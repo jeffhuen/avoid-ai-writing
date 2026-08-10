@@ -13,7 +13,7 @@ Audit & rewrite content to remove AI writing patterns. A practical skill for any
 ---
 
 
-A portable writing skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenClaw](https://github.com/openclaw/openclaw), [Hermes](https://github.com/NousResearch/hermes-agent), and any other [agentskills.io](https://agentskills.io)-compatible agent. Audits and rewrites content to remove AI writing patterns ("AI-isms").
+A portable writing skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), OpenAI Codex, [OpenClaw](https://github.com/openclaw/openclaw), [Hermes](https://github.com/NousResearch/hermes-agent), and any other [agentskills.io](https://agentskills.io)-compatible agent. Audits and rewrites content to remove AI writing patterns ("AI-isms").
 
 This is Jeff Huen's maintained fork of
 [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing).
@@ -52,7 +52,7 @@ A one-shot "make this sound human" prompt catches the obvious stuff. This skill 
 - **Protected Markdown** — profiles can ignore frontmatter, comments, headings, blockquotes, inline quotations, tables, and code while keeping issue offsets aligned with the source file.
 - **Project profiles** — combine protected material, hard rules, project advisories, and positive craft guidance. The included investigative-nonfiction profile preserves narrative value and never optimizes for token count.
 - **Rule provenance** — every catalog category maps to a named upstream section; adaptations from Wikipedia and `blader/humanizer` name their source sections and rationale.
-- **Works across platforms** — one `SKILL.md` runs in Claude Code, Cowork (as a plugin), OpenClaw, and Cursor (as a ported rule). See the install paths below.
+- **Works across platforms** — one `SKILL.md` runs in Claude Code, Cowork, and Codex as a plugin, in OpenClaw as a skill, and in Cursor as a ported rule. See the install paths below.
 
 ### Deterministic project audit
 
@@ -144,9 +144,18 @@ curl -o ~/.hermes/skills/writing/avoid-ai-writing/SKILL.md \
   https://raw.githubusercontent.com/jeffhuen/avoid-ai-writing/main/SKILL.md
 ```
 
-### OpenAI Codex
+### OpenAI Codex — install as a plugin
 
-Codex reads [Agent Skills](https://developers.openai.com/codex/skills) in the same `SKILL.md` format. Put it in `.agents/skills/` at the repo root, or `~/.agents/skills/` to use it across all your projects:
+This repository is also a native Codex marketplace. Install the plugin from GitHub, then start a new thread so Codex loads the skill:
+
+```bash
+codex plugin marketplace add jeffhuen/avoid-ai-writing
+codex plugin add avoid-ai-writing@avoid-ai-writing
+```
+
+The plugin carries Codex display metadata and the same generated `SKILL.md` used by the Claude plugin. Version checks keep both packages aligned.
+
+Codex also reads [Agent Skills](https://developers.openai.com/codex/skills) directly. To install only the loose skill, without plugin updates or marketplace metadata, put it in `.agents/skills/` at the repo root or `~/.agents/skills/` for all projects:
 
 ```bash
 mkdir -p .agents/skills/avoid-ai-writing

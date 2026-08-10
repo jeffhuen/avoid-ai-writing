@@ -1,0 +1,4 @@
+interface:
+  display_name: "Editorial Voice Audit"
+  short_description: "Preserve voice while removing generic AI habits"
+  default_prompt: "Use $avoid-ai-writing to audit this prose against its project profile and preserve the writer’s voice."
