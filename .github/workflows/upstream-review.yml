@@ -1,0 +1,94 @@
+name: upstream-review
+
+on:
+  schedule:
+    - cron: "0 16 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-review
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.repository == 'jeffhuen/avoid-ai-writing'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compare the reviewed baseline with upstream
+        id: compare
+        run: |
+          base="$(tr -d '[:space:]' < .upstream-reviewed)"
+          git remote add upstream https://github.com/conorbronsdon/avoid-ai-writing.git
+          git fetch --no-tags upstream main
+          head="$(git rev-parse upstream/main)"
+
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+
+          if [ "$base" = "$head" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Upstream has not advanced beyond $base." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor "$base" "$head"; then
+            git log --reverse \
+              --format='- [`%h`](https://github.com/conorbronsdon/avoid-ai-writing/commit/%H) %s' \
+              "$base..$head" > upstream-commits.md
+          else
+            {
+              echo "- Upstream history no longer descends from the reviewed baseline."
+              echo "- Inspect the comparison manually before changing the baseline."
+            } > upstream-commits.md
+          fi
+
+      - name: Open one assessment issue
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.compare.outputs.base }}
+          HEAD: ${{ steps.compare.outputs.head }}
+        run: |
+          title="Review new upstream avoid-ai-writing changes"
+          existing="$(gh issue list --state open --search "in:title $title" \
+            --json number,title \
+            --jq --arg t "$title" 'map(select(.title == $t)) | .[0].number // empty')"
+
+          if [ -n "$existing" ]; then
+            echo "Assessment issue #$existing is already open." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "Upstream advanced beyond the last reviewed commit."
+            echo
+            echo "- Reviewed baseline: \`$BASE\`"
+            echo "- Current upstream: \`$HEAD\`"
+            echo "- [Compare the changes](https://github.com/conorbronsdon/avoid-ai-writing/compare/$BASE...$HEAD)"
+            echo
+            echo "## Upstream commits"
+            echo
+            cat upstream-commits.md
+            echo
+            echo "## Assessment"
+            echo
+            echo "- [ ] Classify each change: adopt, adapt, reject, or already covered."
+            echo "- [ ] Preserve this fork's editorial-purpose and source-aware boundaries."
+            echo "- [ ] Add or update regression coverage for anything adopted."
+            echo "- [ ] Run \`npm test\` and \`npm run self-scan:check\`."
+            echo "- [ ] Record material decisions in \`DIRECTION.md\` or provenance."
+            echo "- [ ] Advance \`.upstream-reviewed\` to the assessed upstream commit."
+            echo
+            echo "Do not merge upstream wholesale. Cherry-pick or reimplement only the changes that survive review."
+          } > upstream-review.md
+
+          gh issue create --title "$title" --body-file upstream-review.md

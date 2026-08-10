@@ -77,6 +77,10 @@ It will not copy rules merely to enlarge the catalog.
 - `npm test` validates the detector and the local provenance registry.
 - `npm run sources:check:remote` reports when a tracked Wikipedia page has moved
   beyond the reviewed revision. It never updates rules.
+- `.upstream-reviewed` records the last upstream commit assessed by this fork.
+  The weekly `upstream-review` workflow opens one issue when upstream advances.
+  Review classifies each change as adopt, adapt, reject, or already covered;
+  nothing merges automatically.
 - The inherited npm publication workflow is disabled in this fork. Publication
   resumes only after the package has its own name, ownership, and release
   policy.
@@ -128,3 +132,11 @@ This skill starts from prose. Detect mode flags it; rewrite and edit modes revis
 it. None of those modes replaces a project's drafting or authorial-voice skill.
 A project profile may encode positive craft so the audit can protect it, but the
 writer remains upstream of the checker.
+
+### 2026-08-09: upstream changes enter through assessment
+
+Track Conor Bronsdon's `main` branch from a reviewed commit, not from a moving
+merge target. New commits open an assessment issue. Accepted changes are
+cherry-picked or reimplemented with this fork's regression coverage; rejected
+changes remain documented by the closed issue. Advancing the baseline closes
+the review cycle.
